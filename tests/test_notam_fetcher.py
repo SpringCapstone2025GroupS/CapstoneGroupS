@@ -1,6 +1,8 @@
+from datetime import datetime
 from pytest import MonkeyPatch
 import pytest
 import requests
+from notam_fetcher.api_schema import Notam
 from notam_fetcher.exceptions import NotamFetcherValidationError
 from notam_fetcher.notam_fetcher import NotamFetcher
 
@@ -128,6 +130,38 @@ def mock_empty_response(monkeypatch: MonkeyPatch):
         )
 
     monkeypatch.setattr(requests, "get", returnEmpty)
+
+
+def test_notam_init():
+    """Tests instantiating a Notam object"""
+    notam = Notam(
+        id="NOTAM_1_73849637",
+        number="A2157/24",
+        type='azx',
+        issued= datetime.fromisoformat("2024-10-02T19:54:00.000Z"),
+        selection_code="QCBLS",
+        location="ZJX",
+        effective_start=datetime.fromisoformat("2024-10-02T19:50:00.000Z"),
+        effective_end=datetime.fromisoformat("2024-10-14T22:00:00.000Z"),
+        text="ZJX AIRSPACE ADS-B, AUTO DEPENDENT SURVEILLANCE\nREBROADCAST (ADS-R), TFC INFO SER BCST (TIS-B), FLT INFO SER\nBCST (FIS-B) SER MAY NOT BE AVBL WI AN AREA DEFINED AS 49NM\nRADIUS OF 322403N0781209W.",
+        classification='INTL',
+        account_id="KZJX",
+        last_updated=datetime.fromisoformat("2024-10-02T19:54:00.000Z"),
+        icao_location = "KZJX",
+    )
+    assert notam.id == "NOTAM_1_73849637"
+    assert notam.number == "A2157/24"
+    assert notam.type == "azx"
+    assert notam.issued == datetime.fromisoformat("2024-10-02T19:54:00.000Z")
+    assert notam.selection_code == "QCBLS"
+    assert notam.location == "ZJX"
+    assert notam.effective_start == datetime.fromisoformat("2024-10-02T19:50:00.000Z")
+    assert notam.effective_end == datetime.fromisoformat("2024-10-14T22:00:00.000Z")
+    assert notam.text == "ZJX AIRSPACE ADS-B, AUTO DEPENDENT SURVEILLANCE\nREBROADCAST (ADS-R), TFC INFO SER BCST (TIS-B), FLT INFO SER\nBCST (FIS-B) SER MAY NOT BE AVBL WI AN AREA DEFINED AS 49NM\nRADIUS OF 322403N0781209W."
+    assert notam.classification == 'INTL'
+    assert notam.account_id == "KZJX"
+    assert notam.last_updated == datetime.fromisoformat("2024-10-02T19:54:00.000Z")
+    assert notam.icao_location == "KZJX"
 
 
 def test_fetch_notams_by_latlong_invalid_json(mock_api_received_invalid_json: None):

@@ -74,7 +74,8 @@ class ICAOTranslationObject(NotamTranslationObject):
 
 class Notam(BaseModel):
     model_config = ConfigDict(
-        alias_generator=alias_generators.to_camel
+        alias_generator=alias_generators.to_camel,
+        populate_by_name=True
     )
     
     id: str
@@ -124,7 +125,8 @@ class NotamApiItem(ResponseItem):
 
 class NotamAPIResponse(BaseModel):
     model_config = ConfigDict(
-        alias_generator=alias_generators.to_camel
+        alias_generator=alias_generators.to_camel,
+        populate_by_name=True
     )
     page_size: int
     page_num: int
