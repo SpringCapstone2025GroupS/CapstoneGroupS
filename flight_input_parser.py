@@ -1,49 +1,55 @@
 import argparse
 
 class AirportCodeValidator:
+   
+    # Set of valid airport codes
+    VALID_AIRPORTS = {"JFK", "LAX", "ORD", "DFW", "ATL", "MIA"}
+
     @staticmethod
-    def is_valid(airport_code):
-        # Checks if the given airport code is valid 
-        # Set of valid airport codes, airport_code (str): A three-letter airport code (e.g., "JFK", "LAX")
-        valid_airports = {"JFK", "LAX", "ORD", "DFW", "ATL", "MIA"}
-        if airport_code not in valid_airports:
+    def is_valid(airport_code: str) -> bool:
+        """
+        Checks if the given airport code is valid.
+        
+        Args:
+            airport_code (str): A three-letter airport code (e.g., "JFK", "LAX").
+        
+        Returns:
+            bool: True if valid, raises ValueError if invalid.
+        
+        Raises:
+            ValueError: If the airport code is not found in the valid set.
+        """
+        airport_code = airport_code.upper()  # Normalize input to uppercase
+        if airport_code not in AirportCodeValidator.VALID_AIRPORTS:
             # If the airport code is not found in the valid set, raise an error
             raise ValueError(f"Invalid airport code: {airport_code}")
-        return True # If valid, return True
+        return True  # If valid, return True
+
 
 def get_flight_input():
     """
     Parses command-line arguments and validates both airport codes.
 
-    This function:
-    1. Reads user input from the command line.
-    2. Validates the departure and destination airport codes.
-    3. Returns a tuple (departure, destination) if both are valid.
-    4. Returns None if any airport code is invalid.
-
     Returns:
         tuple: (departure_airport, destination_airport) if valid.
-        None: if either airport code is invalid.
+        None: If either airport code is invalid.
     """
-
-    # argparse is a built-in Python module for handling command-line arguments.
     parser = argparse.ArgumentParser(description="Enter departure and destination airport codes.")
-
-    # Adding expected command-line arguments (departure and destination airport codes)
     parser.add_argument("departure_airport", type=str, help="3-letter airport code for departure")
     parser.add_argument("destination_airport", type=str, help="3-letter airport code for destination")
-
     args = parser.parse_args()
 
-    try:
-        # Validate BOTH airports before proceeding
-         # If either is invalid, an exception will be raised, and execution jumps to the except block.
-        is_departure_valid = AirportCodeValidator.is_valid(args.departure_airport)
-        is_destination_valid = AirportCodeValidator.is_valid(args.destination_airport)
+    # Convert input to uppercase BEFORE validation
+    departure_airport = args.departure_airport.upper()
+    destination_airport = args.destination_airport.upper()
 
-        if is_departure_valid and is_destination_valid:
-            # If both validations pass, return them as a tuple.
-            return args.departure_airport, args.destination_airport
+    try:
+        # Validate both airports
+        AirportCodeValidator.is_valid(departure_airport)
+        AirportCodeValidator.is_valid(destination_airport)
+
+        return departure_airport, destination_airport  # Return corrected uppercase values
+    
     except ValueError as e:
         print(f"Error: {e}")  # Log the error
         return None  # Return None if either airport is invalid
