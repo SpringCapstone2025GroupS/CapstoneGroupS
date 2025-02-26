@@ -60,13 +60,23 @@ class NotamSorter:
         """
         def sorting_key(notam: Notam):
             # Assigning priority to keywords (RWY higher than TWY)
-            keyword_priority = -1 if "RWY" in notam.text else -2 if "TWY" in notam.text else 0
-    
+            keyword_priority = (
+                -1 if notam.selection_code == "RWY" else
+                0 if notam.selection_code == "TWY" else
+                1
+            )
+
+            # Convert maximum flight level (altitude) into an integer for comparison
             max_flight_level = notam.get_max_flight_level()
 
             # Extract numeric part of NOTAM number for tie-breaking
             notam_number = int("".join(filter(str.isdigit, notam.number))) if notam.number else 0
 
+            # Sorting order:
+            # - Higher priority (lower numerical value) comes first
+            # - Earlier start times come first
+            # - Higher max flight levels take priority if start times are the same
+            # - If all else is equal, sort by NOTAM number
             return (keyword_priority, notam.effective_start.timestamp(), -max_flight_level, notam_number)
 
 
