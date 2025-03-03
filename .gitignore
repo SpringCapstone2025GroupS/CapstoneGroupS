@@ -485,7 +485,6 @@ pyrightconfig.json
 [Ll]ib
 [Ll]ib64
 [Ll]ocal
-[Ss]cripts
 pyvenv.cfg
 pip-selfcheck.json
 
@@ -556,3 +555,7 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,vim,emacs,visualstudiocode,pydev,pycharm,java,python,venv,eclipse
 
+/scripts/schema-generation/collected/*
+/scripts/schema-generation/schema.json
+/scripts/schema-generation/quicktype_input.json
+/scripts/schema-generation/model_new_generated.py

@@ -1,7 +1,7 @@
 from pytest import MonkeyPatch
 import pytest
 import requests
-from notam_fetcher.exceptions import NotamFetcherValidationError
+from notam_fetcher.exceptions import NotamFetcherUnauthenticatedError, NotamFetcherValidationError
 from notam_fetcher.notam_fetcher import NotamFetcher
 
 from typing import Any
@@ -34,9 +34,41 @@ def mock_api_received_invalid_json(monkeypatch: MonkeyPatch):
     monkeypatch.setattr(requests, "get", returnInvalid)
 
 
+
 @pytest.fixture
-def mock_one_unexpected_response(monkeypatch: MonkeyPatch):
+def mock_unexpected_response(monkeypatch: MonkeyPatch):
     def returnUnexpected(*args: Any, **kwargs: Any) -> MockResponse:
+        return MockResponse(
+            {
+                "pageSize": 10,
+                "pageNum": 3,
+                "totalCount": 124,
+                "totalPages": 13,
+                "items": [
+                    {
+                        "type": "Point",
+                        "geometry": {"type": "Point", "coordinates": [0]},
+                        "properties": {"name": "Dinagat Islands"},
+                    }
+                ],
+            }
+        )
+
+    monkeypatch.setattr(requests, "get", returnUnexpected)
+
+
+@pytest.fixture
+def mock_unauthorized_response(monkeypatch: MonkeyPatch):
+    def returnEmpty(*args: Any, **kwargs: Any) -> MockResponse:
+        return MockResponse({
+            "error": "Invalid client id or secret"
+        })
+
+    monkeypatch.setattr(requests, "get", returnEmpty)
+
+@pytest.fixture
+def mock_valid_response(monkeypatch: MonkeyPatch):
+    def returnEmpty(*args: Any, **kwargs: Any) -> MockResponse:
         return MockResponse(
             {
                 "pageSize": 50,
@@ -79,39 +111,12 @@ def mock_one_unexpected_response(monkeypatch: MonkeyPatch):
                             }
                         },
                         "geometry": {"type": "GeometryCollection"},
-                    },
-                    {
-                        "type": "Point",
-                        "geometry": {"type": "Point", "coordinates": [0]},
-                        "properties": {"name": "Dinagat Islands"},
-                    },
-                ],
-            }
-        )
-
-    monkeypatch.setattr(requests, "get", returnUnexpected)
-
-
-@pytest.fixture
-def mock_unexpected_response(monkeypatch: MonkeyPatch):
-    def returnUnexpected(*args: Any, **kwargs: Any) -> MockResponse:
-        return MockResponse(
-            {
-                "pageSize": 10,
-                "pageNum": 3,
-                "totalCount": 124,
-                "totalPages": 13,
-                "items": [
-                    {
-                        "type": "Point",
-                        "geometry": {"type": "Point", "coordinates": [0]},
-                        "properties": {"name": "Dinagat Islands"},
                     }
                 ],
             }
         )
 
-    monkeypatch.setattr(requests, "get", returnUnexpected)
+    monkeypatch.setattr(requests, "get", returnEmpty)
 
 
 @pytest.fixture
@@ -143,19 +148,12 @@ def test_fetch_notams_by_latlong_invalid_json(mock_api_received_invalid_json: No
     )
 
 
-def test_fetch_notams_by_latlong_one_unexpected_response(mock_one_unexpected_response: None):
-    """Test that fetch_notams_by_latlong filters a non-notam object in the NOTAMs API response"""
-    notam_fetcher = NotamFetcher("CLIENT_ID", "CLIENT_SECRET")
-    notams = notam_fetcher.fetch_notams_by_latlong(32, 32, 10)
-    assert len(notams) == 1
-    assert notams[0].id == "NOTAM_1_73849637"
-
 
 def test_fetch_notams_by_latlong_unexpected_response(mock_unexpected_response: None):
     """Test that fetch_notams_by_latlong filters a non-notam object in the NOTAMs API response"""
     notam_fetcher = NotamFetcher("CLIENT_ID", "CLIENT_SECRET")
-    notams = notam_fetcher.fetch_notams_by_latlong(32, 32, 10)
-    assert len(notams) == 0
+    with pytest.raises(NotamFetcherValidationError):
+        notam_fetcher.fetch_notams_by_latlong(32, 32, 10)
 
 
 def test_fetch_notams_by_latlong_no_notams(mock_empty_response: None):
@@ -170,3 +168,13 @@ def test_fetchNotamsByAirportCode_no_notams(mock_empty_response: None):
     notam_fetcher = NotamFetcher("CLIENT_ID", "CLIENT_SECRET")
     notams = notam_fetcher.fetch_notams_by_airport_code("LAX")
     assert len(notams) == 0
+
+
+def test_fetchNotams_unauthorized(mock_unauthorized_response: None):
+    """Test that fetchNotamsByAirportCode handles the case where API returns no NOTAMs"""
+    notam_fetcher = NotamFetcher("CLIENT_ID", "CLIENT_SECRET")
+    with pytest.raises(NotamFetcherUnauthenticatedError):
+        notam_fetcher.fetch_notams_by_airport_code("LAX")
+
+    with pytest.raises(NotamFetcherUnauthenticatedError):
+        notam_fetcher.fetch_notams_by_latlong(32, 32, 10)
