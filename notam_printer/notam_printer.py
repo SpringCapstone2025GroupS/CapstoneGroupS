@@ -60,7 +60,7 @@ class Notam:
         self.icao_location = icao_location
 
 class NotamPrinter:
-    def formatNotam(self, notam: Notam):
+    def formatNotam(self, notam: Notam) -> str:
         """
         Formats a NotAM object into a legible string representation.
 
