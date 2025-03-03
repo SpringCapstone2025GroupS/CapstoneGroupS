@@ -5,6 +5,7 @@ from geopy import Point
 from collections import defaultdict
 from geopy.distance import geodesic
 from geographiclib.geodesic import Geodesic
+from exceptions import AirportNotFoundError, GapIsNotValid
 # to visualize
 import folium
 '''
@@ -30,7 +31,7 @@ class FlightPath:
         pass
     
 
-    def __get_coordinates(self, airport_code):
+    def __get_coordinates(self, airport_code) -> Tuple[float, float]:
         """
         Translates Airport Codes to Coordinates.
 
@@ -43,7 +44,7 @@ class FlightPath:
         row = self.airport_data.loc[(self.airport_data["ICAO"] == airport_code) | (self.airport_data["IATA"] == airport_code)] # This can be changed to only ICAC in the future when merging.
 
         if row.empty:
-            raise ValueError(f"Airport code {airport_code} not found in the dataset.")
+            raise AirportNotFoundError(f"Airport code '{airport_code}' not found in the dataset.")
         
         latitude = row.iloc[0]["Latitude"]
         longitude = row.iloc[0]["Longitude"]
@@ -51,7 +52,7 @@ class FlightPath:
         return latitude, longitude
     
     
-    def get_waypoints(self, n: int) -> List[Tuple[float, float]]:
+    def get_waypoints_by_num(self, n: int) -> List[Tuple[float, float]]:
         """
         Generates `n` waypoints along the flight path.
 
@@ -74,18 +75,46 @@ class FlightPath:
             return result
         
         # find n points on the way
-        total_dist = geodesic(depart, dest).km # this is real world distance on earth, great-circle distance.
+        total_dist = geodesic(depart, dest).miles # this is real world distance on earth, great-circle distance.
         step_size = total_dist/ (n+1)
         # get the direction of the two points, bearing (angle of the line)
         bearing = Geodesic.WGS84.Inverse(self.departure[0], self.departure[1], self.destination[0], self.destination[1])
 
         for i in range(1, n+1):
-            next_point = geodesic(kilometers = step_size * i).destination(depart, bearing["azi1"]) # --> az1 here is the initial bearing (the angle of the line from the departure to the destination airport)
+            next_point = geodesic(miles = step_size * i).destination(depart, bearing["azi1"]) # --> az1 here is the initial bearing (the angle of the line from the departure to the destination airport)
             result.append((next_point.latitude, next_point.longitude))
         
         result.append((dest.latitude, dest.longitude))
         
         return result
+    
+    def get_waypoints_by_gap(self, gap: float) -> List[Tuple[float, float]]:
+        """
+        Generates waypoints along the flight path based on a specified gap distance.
+
+        Uses the great-circle distance to compute waypoints from 
+        the departure airport to the destination, ensuring that each waypoint is approximately 'gap' miles apart.
+
+        Args:
+            gap (float): The distance (in miles) between each waypoint.
+
+        Returns:
+            list: A list of tuples containing the latitude and longitude of each waypoint.
+        """
+        depart = Point(self.departure[0], self.departure[1])
+        dest = Point(self.destination[0], self.destination[1])
+
+        # Calculate total great-circle distance between departure and destination
+        total_dist = geodesic(depart, dest).miles  
+
+        # Determine the number of waypoints based on the gap
+        if gap <= 0:
+            raise GapIsNotValid("Gap is not a valid number.")
+        
+        num_waypoints = int(total_dist // gap)  # Number of waypoints along the route
+
+        return self.get_waypoints_by_num(num_waypoints)
+
 
 # for testing purposes only!
 def main():
@@ -94,8 +123,8 @@ def main():
 
     flight_path = FlightPath(departure, destination)
 
-    num_points = input("How many waypoints\n")
-    waypoints = flight_path.get_waypoints(int(num_points)) # you can choose how many points you want between the depart and destination here.
+    gap = input("What is the gap?\n")
+    waypoints = flight_path.get_waypoints_by_gap(float(gap)) # you can choose how many points you want between the depart and destination here.
 
     # to visualize
     m = folium.Map(location=waypoints[0], zoom_start=5)
@@ -104,7 +133,7 @@ def main():
     for coord in waypoints:
         folium.Marker(coord).add_to(m)
 
-    m.save("map.html")
+    m.save("../map.html")
     print("Map saved")
 
 if __name__ == "__main__":
