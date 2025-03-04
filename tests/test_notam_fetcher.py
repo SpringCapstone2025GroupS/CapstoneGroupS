@@ -172,9 +172,84 @@ def test_fetchNotamsByAirportCode_no_notams(mock_empty_response: None):
 
 def test_fetchNotams_unauthorized(mock_unauthorized_response: None):
     """Test that fetchNotamsByAirportCode handles the case where API returns no NOTAMs"""
-    notam_fetcher = NotamFetcher("CLIENT_ID", "CLIENT_SECRET")
+    notam_fetcher = NotamFetcher("INVALID_CLIENT_ID", "CLIENT_SECRET")
     with pytest.raises(NotamFetcherUnauthenticatedError):
         notam_fetcher.fetch_notams_by_airport_code("LAX")
 
     with pytest.raises(NotamFetcherUnauthenticatedError):
         notam_fetcher.fetch_notams_by_latlong(32, 32, 10)
+
+
+def test_notam_fetcher_page_size_constraints():
+    """
+    Tests that only setting the page_size to an invalid size throws a ValueError.
+    """
+    with pytest.raises(ValueError):
+        NotamFetcher("CLIENT_ID", "CLIENT_SECRET", page_size=10001)
+    with pytest.raises(ValueError):
+        NotamFetcher("CLIENT_ID", "CLIENT_SECRET", page_size=0)
+
+    valid_client = NotamFetcher("CLIENT_ID", "CLIENT_SECRET", page_size=1000)
+    assert(valid_client.page_size==1000)
+    valid_client = NotamFetcher("CLIENT_ID", "CLIENT_SECRET", page_size=1)
+    assert(valid_client.page_size==1)
+
+    valid_client.page_size=10
+    assert(valid_client.page_size==10)
+    
+    with pytest.raises(ValueError):
+        valid_client.page_size=0
+    with pytest.raises(ValueError):
+        valid_client.page_size=1001
+
+def test_request_params(monkeypatch: MonkeyPatch):
+    """
+    Tests that the page_size member of a NotamFetcher instance is being used in outbound requests. 
+    """
+    def assert_lat_long_params_and_return_empty(*args: Any, **kwargs: Any) -> MockResponse:
+        assert(kwargs.get('params') == 
+            {
+                "locationLongitude": str(30),
+                "locationLatitude": str(30),
+                "locationRadius": str(float(100)),
+                "page_num": str(1),
+                "page_size": str(500),
+            }
+        )
+        return MockResponse(
+            {
+                "pageSize": 50,
+                "pageNum": 1,
+                "totalCount": 0,
+                "totalPages": 0,
+                "items": [],
+            }
+        )
+    
+    
+    monkeypatch.setattr(requests, "get", assert_lat_long_params_and_return_empty)
+
+    client = NotamFetcher("CLIENT_ID", "CLIENT_SCRET", page_size=500)
+    client.fetch_notams_by_latlong(30, 30)
+
+    client.page_size=100
+    def assert_airport_code_params_and_return_empty(*args: Any, **kwargs: Any) -> MockResponse:
+        assert(kwargs.get('params') == 
+            {
+                "icaoLocation": str('DEN'),
+                "page_num": str(1),
+                "page_size": str(100),
+            }
+        )
+        return MockResponse(
+            {
+                "pageSize": 50,
+                "pageNum": 1,
+                "totalCount": 0,
+                "totalPages": 0,
+                "items": [],
+            }
+        )
+    monkeypatch.setattr(requests, "get", assert_airport_code_params_and_return_empty)
+    client.fetch_notams_by_airport_code('DEN')
+    

@@ -31,16 +31,26 @@ class NotamAirportCodeRequest(NotamRequest):
 
 class NotamFetcher:
     FAA_API_URL = "https://external-api.faa.gov/notamapi/v1/notams"
-
+    _page_size : int
+    
     def __init__(self, client_id: str, client_secret: str, page_size: int = 1000):
         self.client_id = client_id
         self.client_secret = client_secret
+        self.page_size=page_size
 
-        if page_size > 1000:
+
+    @property
+    def page_size(self):
+        return self._page_size
+
+    @page_size.setter
+    def page_size(self, value: int):
+        if value > 1000:
             raise ValueError("page_size must be less than 1000")
-    
-        self._page_size = page_size
-
+        if value <= 0:
+            raise ValueError("page_size must be greater than 0")
+        self._page_size = value
+        
     
     def fetch_notams_by_airport_code(self, airport_code: str):
         """
@@ -57,7 +67,7 @@ class NotamFetcher:
             NotamFetcherRequestError: If a requests error occurs while fetching from the API.
         """
         request = NotamAirportCodeRequest(airport_code)
-        request.page_size = self._page_size
+        request.page_size = self.page_size
 
         return self._fetch_all_notams(request)
 
@@ -84,7 +94,7 @@ class NotamFetcher:
             raise ValueError(f"Radius must be greater than 0")
         
         request = NotamLatLongRequest(lat, long, radius)
-        request.page_size = self._page_size
+        request.page_size = self.page_size
 
         return self._fetch_all_notams(request)
 
@@ -109,13 +119,8 @@ class NotamFetcher:
             # Did not get a successful response while fetching one of the NOTAMs. Raise
             raise NotamFetcherUnexpectedError(first_page)
 
-        first_page.total_pages
-        notamItems.extend(
-            [
-                item.properties.coreNOTAMData
-                for item in first_page.items
-            ]
-        )
+
+        notamItems.extend([item.properties.coreNOTAMData for item in first_page.items])
 
         for i in range(2, first_page.total_pages + 1):
             request.page_num = i
@@ -123,12 +128,7 @@ class NotamFetcher:
             if not isinstance(nextPage, APIResponseSuccess):
                 raise NotamFetcherUnexpectedError(nextPage)
             
-            notamItems.extend(
-                [
-                    item.properties.coreNOTAMData
-                    for item in nextPage.items
-                ]
-            )
+            notamItems.extend([item.properties.coreNOTAMData for item in nextPage.items])
         
         return notamItems
         
@@ -199,7 +199,7 @@ class NotamFetcher:
             NotamFetcherRequestError if a requests error occured.
             NotamFetcherUnexpectedError if the response was invalid JSON.
         """
-        query_string ={}
+        query_string = {}
 
         if isinstance(request, NotamLatLongRequest):
             if request.radius > 100:
@@ -238,9 +238,5 @@ class NotamFetcher:
         try:
             return response.json()
         except requests.exceptions.JSONDecodeError:
-            raise (
-                NotamFetcherUnexpectedError(
-                    f"Response from API unexpectedly not JSON. Received text: {response.text} "
-                )
-            )
+            raise (NotamFetcherUnexpectedError(f"Response from API unexpectedly not JSON. Received text: {response.text}"))
         

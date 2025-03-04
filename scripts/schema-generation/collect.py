@@ -1,7 +1,7 @@
 """
 Collects and saves NOTAM responses from the FAA API to be used in genson model generation.
 
-The script does this buy colleting NOTAMs from GPS coordinates starting at the top left and ending the bottom right
+The script does this buy collecting NOTAMs from GPS coordinates starting at the top left and ending the bottom right
 We interpolate between the top left and bottom creating a STEPS * STEPS grid where we pull NOTAM data from.  
 """
 from dotenv import load_dotenv
@@ -49,8 +49,6 @@ os.makedirs('./scripts/data-for-schema-generation/collected/')
 for lat in linspace(US_TOP_LEFT["lat"], US_BOTTOM_RIGHT["lat"], STEPS):
     for long in linspace(US_TOP_LEFT["long"], US_BOTTOM_RIGHT["long"], STEPS):
         request : NotamLatLongRequest = NotamLatLongRequest(lat, long, 100)
-        request.page_num=1
-        request.page_size=1000
         response = notam_fetcher._fetch_notams_raw(request)         # type: ignore
         with open(f'./scripts/data-for-schema-generation/collected/response-{lat}-{long}.json', 'w') as file:
             json.dump(response, file)
