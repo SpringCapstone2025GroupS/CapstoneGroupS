@@ -26,9 +26,9 @@ def test_get_coordinates_invalid():
 # Essentially if n is the number of waypoints, the returned list should have n+2
 # +2 for the departure airport, and destinaton airport
 @pytest.mark.parametrize("n", [0, 1, 5, 10, 150, 202, 34468, 4444])
-def test_get_waypoints_by_num(n):
+def test_get_waypoints_by_num(n: int):
     flight_path = FlightPath("JFK", "LAX")
-    waypoints = flight_path.get_waypoints(n)
+    waypoints = flight_path.get_waypoints_by_num(n)
     assert len(waypoints) == n + 2 
 
 # Test if waypoints list that is returned is a set of unique coordinates.

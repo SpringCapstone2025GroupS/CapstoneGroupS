@@ -5,9 +5,10 @@ from geopy import Point
 from collections import defaultdict
 from geopy.distance import geodesic
 from geographiclib.geodesic import Geodesic
-from exceptions import AirportNotFoundError, GapIsNotValid
+from .exceptions import AirportNotFoundError, GapIsNotValid
 # to visualize
 import folium
+from airport_data import AirportData
 '''
 Flight Path Component.
 
@@ -23,34 +24,16 @@ Features:
 
 class FlightPath:
 
-    airport_data =pd.read_csv("../airport_info/airports_data.csv")
+
 
     def __init__(self, departure_code: str, destination_code: str):
-        self.departure = self.__get_coordinates(departure_code)
-        self.destination = self.__get_coordinates(destination_code)
+        self.departure  = AirportData.get_airport_latlong(departure_code)
+        self.destination  = AirportData.get_airport_latlong(destination_code)
+        if not self.departure or not self.destination:
+            raise AirportNotFoundError
         pass
     
 
-    def __get_coordinates(self, airport_code) -> Tuple[float, float]:
-        """
-        Translates Airport Codes to Coordinates.
-
-        Args:
-            airport_code (str): Aiport Code (for now it is accepting both ICAC and IATA format)
-    
-        Returns:
-            (latitude, longitude) tuple(str): Tuple of latitude and longitude of the airport position
-        """
-        row = self.airport_data.loc[(self.airport_data["ICAO"] == airport_code) | (self.airport_data["IATA"] == airport_code)] # This can be changed to only ICAC in the future when merging.
-
-        if row.empty:
-            raise AirportNotFoundError(f"Airport code '{airport_code}' not found in the dataset.")
-        
-        latitude = row.iloc[0]["Latitude"]
-        longitude = row.iloc[0]["Longitude"]
-
-        return latitude, longitude
-    
     
     def get_waypoints_by_num(self, n: int) -> List[Tuple[float, float]]:
         """
