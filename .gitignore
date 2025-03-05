@@ -14,6 +14,7 @@ local.properties
 .loadpath
 .recommenders
 
+
 # External tool builders
 .externalToolBuilders/
 
@@ -552,6 +553,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Ignore all HTML files
+*.html
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,vim,emacs,visualstudiocode,pydev,pycharm,java,python,venv,eclipse
 
