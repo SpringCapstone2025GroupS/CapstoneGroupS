@@ -1,3 +1,4 @@
+# type: ignore error
 import pytest
 from flight_path.flight_path import FlightPath
 from geographiclib.geodesic import Geodesic

@@ -301,7 +301,7 @@ class APIItem(BaseModel):
 
     type: ItemType
     properties: Properties
-    geometry: ItemGeometry
+    geometry: Any
 
 
 class APIResponseSuccess(BaseModel):

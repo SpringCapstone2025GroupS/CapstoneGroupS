@@ -162,7 +162,7 @@ class NotamFetcher:
 
         # APIResponseSuccess case
         try:
-            return APIResponseSuccess.model_validate(data)
+            return  APIResponseSuccess.model_validate(data) 
         except ValidationError:
             pass
         
@@ -177,6 +177,7 @@ class NotamFetcher:
         except ValidationError:
             pass
 
+        
         # APIResponseMessage case
         try:
             message_response = APIResponseMessage.model_validate(data)
@@ -200,7 +201,6 @@ class NotamFetcher:
             NotamFetcherUnexpectedError if the response was invalid JSON.
         """
         query_string = {}
-
         if isinstance(request, NotamLatLongRequest):
             if request.radius > 100:
                 raise ValueError("radius must be less than 100")
@@ -211,17 +211,18 @@ class NotamFetcher:
                 "locationLongitude": str(request.long),
                 "locationLatitude": str(request.lat),
                 "locationRadius": str(request.radius),
-                "page_num": str(request.page_num),
-                "page_size": str(request.page_size),
+                "pageNum": str(request.page_num),
+                "pageSize": str(request.page_size),
             }
 
         if isinstance(request, NotamAirportCodeRequest):
             query_string = {
                 "icaoLocation": str(request.airport_code),
-                "page_num": str(request.page_num),
-                "page_size": str(request.page_size),
+                "pageNum": str(request.page_num),
+                "pageSize": str(request.page_size),
             }
 
+        print(query_string)
 
         try:
             response = requests.get(
