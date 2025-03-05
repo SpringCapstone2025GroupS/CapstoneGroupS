@@ -9,7 +9,7 @@ class AirportData:
     df = pd.read_csv(airports_file, names=columns, header=None)
 
     @staticmethod
-    def get_airport_latlong(airport_code: float):
+    def get_airport_latlong(airport_code: str):
         '''
         Retrieves the latitude and longitude of an airport
 
@@ -17,12 +17,19 @@ class AirportData:
             airport_code (str): Airport code accepting both IATA and ICAO format.
 
         Returns:
-            tuple: (latitude, longitude) if found, else None
+            tuple: (latitude, longitude), if found
+
+        Raises:
+            RuntimeError: If the airport data file is missing or empty.
+            ValueError: If the airport code is not found.
         '''
+        if AirportData.df is None or AirportData.df.empty:
+            raise RuntimeError("Airport data is not available. Check if the file exists and is correctly formatted.")
+
         airport = AirportData.df[(AirportData.df["IATA"] == airport_code) | (AirportData.df["ICAO"] == airport_code)]
         if not airport.empty:
             return airport.iloc[0]["Latitude"], airport.iloc[0]["Longitude"]
-        return None
+        raise ValueError(f"Airport code '{airport_code}' not found.")
 
     @staticmethod
     def get_airport_country(airport_code: str):
@@ -33,12 +40,19 @@ class AirportData:
             airport_code (str): Airport code accepting both IATA and ICAO format.
 
         Returns:
-            str: Country name if found, else None
+            str: Country name, if found
+
+        Raises:
+            RuntimeError: If the airport data file is missing or empty.
+            ValueError: If the airport code is not found.
         '''
+        if AirportData.df is None or AirportData.df.empty:
+            raise RuntimeError("Airport data is not available. Check if the file exists and is correctly formatted.")
+
         airport = AirportData.df[(AirportData.df["IATA"] == airport_code) | (AirportData.df["ICAO"] == airport_code)]
         if not airport.empty:
             return airport.iloc[0]["Country"]
-        return None
+        raise ValueError(f"Airport code '{airport_code}' not found.")
 
     @staticmethod
     def get_airport_timezone(airport_code: str):
@@ -46,12 +60,19 @@ class AirportData:
         Retrieves the timezone of an airport
 
         Args:
-            airport_code (str): Airport code accepting both IATA and ICAO foramt.
+            airport_code (str): Airport code accepting both IATA and ICAO format.
 
         Returns:
-            str: Timezone if found, else None
+            str: Tz Database Timezone, if found
+
+        Raises:
+            RuntimeError: If the airport data file is missing or empty.
+            ValueError: If the airport code is not found.
         '''
+        if AirportData.df is None or AirportData.df.empty:
+            raise RuntimeError("Airport data is not available. Check if the file exists and is correctly formatted.")
+
         airport = AirportData.df[(AirportData.df["IATA"] == airport_code) | (AirportData.df["ICAO"] == airport_code)]
         if not airport.empty:
             return airport.iloc[0]["Tz Database Timezone"]
-        return None
+        raise ValueError(f"Airport code '{airport_code}' not found.")
