@@ -116,7 +116,7 @@ def main():
     for coord in waypoints:
         folium.Marker(coord).add_to(m)
 
-    m.save("../map.html")
+    m.save("./map.html")
     print("Map saved")
 
 if __name__ == "__main__":

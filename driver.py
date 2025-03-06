@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     print(f"Fetching Flights from {departure_airport.upper()} to {destination_airport.upper()}.")
     flight_path = FlightPath(departure_code=departure_airport, destination_code=destination_airport)
-    waypoints = flight_path.get_waypoints_by_num(5)
+    waypoints = flight_path.get_waypoints_by_gap(20)
     notam_fetcher = NotamFetcher(CLIENT_ID, CLIENT_SECRET)
     
     all_notams : list[CoreNOTAMData] = []
