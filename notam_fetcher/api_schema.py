@@ -56,7 +56,7 @@ Example response:
 
 from datetime import datetime
 from typing import Any, Literal, Optional
-from pydantic import BaseModel, ConfigDict, Field, alias_generators
+from pydantic import BaseModel, Field
 
 
 class NotamTranslationObject(BaseModel):
@@ -73,9 +73,6 @@ class ICAOTranslationObject(NotamTranslationObject):
 
 
 class Notam(BaseModel):
-    model_config = ConfigDict(
-        alias_generator=alias_generators.to_camel
-    )
     
     id: str
     number: str
@@ -123,9 +120,6 @@ class NotamApiItem(ResponseItem):
 
 
 class NotamAPIResponse(BaseModel):
-    model_config = ConfigDict(
-        alias_generator=alias_generators.to_camel
-    )
     page_size: int
     page_num: int
     total_count: int
