@@ -18,7 +18,7 @@ class NotamSorter:
                 seen.add(notam.id)
                 unique_notams.append(notam)
 
-        self.notams: List[Notam] = notams
+        self.notams: List[Notam] = unique_notams
 
         """
         Sort NOTAMs based on priority:

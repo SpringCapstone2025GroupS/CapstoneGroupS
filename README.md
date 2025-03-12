@@ -6,6 +6,14 @@ On January 11th, 2023, a failure in the FAA's NOTAM (Notice to Air Missions) sys
 
 ---
 
+## Installation
+Install requirements with pip install -r requirements.txt
+## Testing
+    Run pytests with pytest
+## Running
+    Run program with python driver.py
+
+
 ## :star2: Objectives
 
 This project aims to design a system that:
