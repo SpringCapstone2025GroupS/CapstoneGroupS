@@ -7,6 +7,7 @@ from .exceptions import (
     NotamFetcherUnauthenticatedError,
     NotamFetcherUnexpectedError,
     NotamFetcherValidationError,
+    NotamFetcherRateLimitError
 )
 
 
@@ -150,6 +151,11 @@ class NotamFetcher:
                 params=query_string,
             )
 
+            # this will check if the API rate limit is reached
+            # if the api rate limit is reached Exception an exception is raised
+            if response.status_code == 429:
+                raise NotamFetcherRateLimitError
+
         except requests.exceptions.RequestException as e:
             raise NotamFetcherRequestError from e
 
@@ -211,6 +217,10 @@ class NotamFetcher:
                 },
                 params=query_string,
             )
+            # this will check if the API rate limit is reached
+            # if the api rate limit is reached Exception an exception is raised
+            if response.status_code == 429:
+                raise NotamFetcherRateLimitError
 
         except requests.exceptions.RequestException as e:
             raise NotamFetcherRequestError from e

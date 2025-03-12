@@ -18,3 +18,9 @@ class NotamFetcherValidationError(NotamFetcherBaseError):
     def __init__(self, message: str, obj: Any):
         super().__init__(message)
         self.invalid_object = obj
+
+class NotamFetcherRateLimitError(Exception):
+    """Exception raised when the API rate limit is exceeded."""
+
+    def __init__(self):
+        message = "Rate limit exceeded. Try again later."
