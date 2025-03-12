@@ -2,27 +2,31 @@ from datetime import datetime, timezone
 from pytest import MonkeyPatch
 import pytest
 import requests
+from notam_fetcher.exceptions import NotamFetcherUnauthenticatedError, NotamFetcherUnexpectedError, NotamFetcherValidationError, NotamFetcherRateLimitError
 from notam_fetcher.api_schema import Classification, CoreNOTAMData, ICAOTranslation, Notam, NotamEvent, NotamType
-from notam_fetcher.exceptions import NotamFetcherUnauthenticatedError, NotamFetcherUnexpectedError, NotamFetcherValidationError
 from notam_fetcher.notam_fetcher import NotamFetcher
 
-from typing import Any
+from typing import Any, Optional, Dict
 
 
 class MockResponse:
     """
-    This class only mocks the .json() of a request.Response.
-
-    Used to test different JSON responses.
-
-    Example:
-    monkeypatch.setattr(requests, "get", returnInvalid)
+    If no custom response is provided, this class simulates a rate limit response with a
+    429 status code and a fixed JSON error message. Otherwise, it returns the custom response
+    (with a default status code of 200, unless overridden).
 
     """
-    def __init__(self, response: dict[str, Any]):
-        self.response = response
+    def __init__(self, response: Optional[Dict[str, Any]] = None, status_code: Optional[int] = None):
+        if response is None:
+            # Mimic the behavior of MockRateLimitResponse
+            self.response = {"error": "Rate limit exceeded"}
+            self.status_code = 429 if status_code is None else status_code
+        else:
+            # Mimic the behavior of MockResponse
+            self.response = response
+            self.status_code = 200 if status_code is None else status_code
 
-    def json(self) -> dict[str, Any]:
+    def json(self) -> Dict[str, Any]:
         return self.response
 
 
@@ -345,3 +349,32 @@ def test_request_params(monkeypatch: MonkeyPatch):
         )
     monkeypatch.setattr(requests, "get", assert_airport_code_params_and_return_empty)
     client.fetch_notams_by_airport_code(TEST_AIRPORT_CODE)
+
+@pytest.fixture
+def mock_rate_limit_response(monkeypatch):
+    """Fixture to mock the API returning a 429 status code"""
+
+    def returnRateLimit(*args: Any, **kwargs: Any) -> MockResponse:
+        return MockResponse()
+
+    monkeypatch.setattr("requests.get", returnRateLimit)
+
+
+def test_fetch_notams_by_airport_code_rate_limit(mock_rate_limit_response):
+    """Test that a rate limit error (429) correctly raises NotamFetcherRateLimitError
+        When called on fetch_notam_by_airport_code"""
+    notam_fetcher = NotamFetcher("CLIENT_ID", "CLIENT_SECRET")
+
+    with pytest.raises(NotamFetcherRateLimitError):
+        notam_fetcher.fetch_notams_by_airport_code("JFK")
+
+
+def test_fetch_notams_by_latlong_rate_limit(mock_rate_limit_response):
+    """Test that a rate limit error (429) correctly raises NotamFetcherRateLimitError
+        When called on fetch_notams_by_latlong"""
+    notam_fetcher = NotamFetcher("CLIENT_ID", "CLIENT_SECRET")
+
+    with pytest.raises(NotamFetcherRateLimitError):
+        notam_fetcher.fetch_notams_by_latlong(32.0, -97.0, 50.0)
+    
+    
