@@ -63,11 +63,11 @@ def test_format_notams(sample_notams: List[Notam]):
         formatted_notam = printer.formatNotam(notam)
         assert "ID: " + notam.id in formatted_notam
         assert "Number: " + notam.number in formatted_notam
-        assert "Type: " + notam.type in formatted_notam
-        assert "Issued: " + notam.issued in formatted_notam
+        assert "Type: " + str(notam.type) in formatted_notam
+        assert "Issued: " + str(notam.issued) in formatted_notam
         assert "Location: " + notam.location in formatted_notam
-        assert "Effective Start: " + notam.effective_start in formatted_notam
-        assert "Effective End: " + notam.effective_end in formatted_notam
+        assert "Effective Start: " + str(notam.effective_start) in formatted_notam
+        assert "Effective End: " + str(notam.effective_end) in formatted_notam
         assert "Text: " + notam.text in formatted_notam
 
 def test_print_notams(sample_notams: List[Notam], capsys: CaptureFixture[str]):

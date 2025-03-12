@@ -125,6 +125,8 @@ class NotamType(Enum):
     N = 'N'
     C = 'C'
     R = 'R'
+    def __str__(self):
+        return self.value
 
 class TrafficType(Enum):
     """

@@ -211,15 +211,15 @@ class NotamFetcher:
                 "locationLongitude": str(request.long),
                 "locationLatitude": str(request.lat),
                 "locationRadius": str(request.radius),
-                "pageNum": str(request.page_num),
-                "pageSize": str(request.page_size),
+                "page_num": str(request.page_num),
+                "page_size": str(request.page_size),
             }
 
         if isinstance(request, NotamAirportCodeRequest):
             query_string = {
                 "icaoLocation": str(request.airport_code),
-                "pageNum": str(request.page_num),
-                "pageSize": str(request.page_size),
+                "page_num": str(request.page_num),
+                "page_size": str(request.page_size),
             }
 
         print(query_string)
