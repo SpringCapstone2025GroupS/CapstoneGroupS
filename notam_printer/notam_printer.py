@@ -1,10 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
-from datetime import datetime
-from typing import List, Optional
 from rich.console import Console
 
-# Define NotAM class
 # Define NotAM class
 class Notam:
 
@@ -62,7 +59,7 @@ class Notam:
 class NotamPrinter:
     def formatNotam(self, notam: Notam) -> str:
         """
-        Formats a NotAM object into a legible string representation.
+        Formats a Notam object into a legible string representation.
 
         Args:
             notam (Notam): The Notam object to format
@@ -105,59 +102,4 @@ class NotamPrinter:
             console.print()
             console.print("-" * 80)
             console.print()
-
-# Test printing with mock data.
-if __name__ == '__main__':
-    sample_notams = [
-        Notam(
-            id="1",
-            number="A150/24",
-            type="N",
-            issued="2024-02-24T10:00:00.000Z",
-            selection_code="RWY",
-            location="JFK",
-            effective_start="2024-02-25T12:00:00.000Z",
-            effective_end="2024-02-26T12:00:00.000Z",
-            text="Runway maintenance",
-            maximumFL="040",
-            classification="INTL",
-            account_id="JFK",
-            last_updated="2024-02-24T11:00:00.000Z",
-            icao_location="KJFK",
-        ),
-        Notam(
-            id="2",
-            number="A151/24",
-            type="N",
-            issued="2024-02-24T11:00:00.000Z",
-            selection_code="GEN",
-            location="LAX",
-            effective_start="2024-02-25T14:00:00.000Z",
-            effective_end="2024-02-27T14:00:00.000Z",
-            text="General notice",
-            maximumFL="030",
-            classification="DOM",
-            account_id="LAX",
-            last_updated="2024-02-24T12:00:00.000Z",
-            icao_location="KLAX",
-        ),
-        Notam(
-            id="3",
-            number="A149/24",
-            type="N",
-            issued="2024-02-24T09:00:00.000Z",
-            selection_code="TWY",
-            location="ORD",
-            effective_start="2024-02-25T11:00:00.000Z",
-            effective_end="2024-02-27T11:00:00.000Z",
-            text="Taxiway closed",
-            maximumFL="050",
-            classification="INTL",
-            account_id="ORD",
-            last_updated="2024-02-24T10:30:00.000Z",
-            icao_location="KORD",
-        )
-    ]
-
-    printer = NotamPrinter()
-    printer.print_notams(sample_notams)
+            
