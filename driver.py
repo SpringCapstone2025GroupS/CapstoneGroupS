@@ -30,21 +30,29 @@ class NotamSorter:
 
 
 
-load_dotenv()
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-if CLIENT_ID is None:
-    sys.exit("Error: CLIENT_ID not set in .env file")
-if CLIENT_SECRET is None:
-    sys.exit("Error: CLIENT_SECRET not set in .env file")
 
-if __name__ == "__main__":
+
+def main():
     """
     Main execution block:
+    - Load environment variables for CLIENT_ID and CLIENT_SECRET
     - Calls get_flight_input() to get user input.
     - Validates the input using AirportCodeValidator.
     - Prints a confirmation message if valid or an error message if invalid.
+    - Uses FlightPath to determine flight path.
+    - Calls NotamFetcher for each coordinate returned from flight path.
+    - Sorts using NOTAM sorter
+    - Prints using NotamPrinter
     """
+
+    load_dotenv()
+    CLIENT_ID = os.getenv("CLIENT_ID")
+    CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+
+    if CLIENT_ID is None:
+        sys.exit("Error: CLIENT_ID not set in .env file")
+    if CLIENT_SECRET is None:
+        sys.exit("Error: CLIENT_SECRET not set in .env file")
     # Get user input
     departure_airport, destination_airport = get_flight_input()
 
@@ -80,3 +88,6 @@ if __name__ == "__main__":
     sorted_notams = sorter.sort()
     printer = NotamPrinter()
     printer.print_notams(sorted_notams)
+
+if __name__ == "__main__":
+    main()
