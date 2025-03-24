@@ -5,9 +5,10 @@ from geopy import Point
 from collections import defaultdict
 from geopy.distance import geodesic
 from geographiclib.geodesic import Geodesic
-from exceptions import AirportNotFoundError, GapIsNotValid
+from .exceptions import AirportNotFoundError, GapIsNotValid
 # to visualize
 import folium
+import os
 '''
 Flight Path Component.
 
@@ -21,9 +22,11 @@ Features:
 
 '''
 
+
 class FlightPath:
 
-    airport_data =pd.read_csv("../airport_info/airports_data.csv")
+
+    airport_data = pd.read_csv(f"{os.path.dirname(__file__)}/../airport_info/airports_data.csv")
 
     def __init__(self, departure_code: str, destination_code: str):
         self.departure = self.__get_coordinates(departure_code)
