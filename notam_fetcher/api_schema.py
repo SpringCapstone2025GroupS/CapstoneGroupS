@@ -19,9 +19,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 from typing import Any, List, Literal, NamedTuple, Optional, Set
-
 from pydantic import BaseModel, ConfigDict, field_validator, alias_generators
-
 
 class AdditionalGeometryData(BaseModel):
     model_config = ConfigDict(
@@ -240,6 +238,7 @@ class ItemGeometry(BaseModel):
 
 
 class Notam(BaseModel):
+
     model_config = ConfigDict(
         extra = 'forbid',
         alias_generator=alias_generators.to_camel,
