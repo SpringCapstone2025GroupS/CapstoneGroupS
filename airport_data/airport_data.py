@@ -3,16 +3,16 @@ import pandas as pd
 import os
 
 class AirportData:
-    columns = ["Airport ID", "Name", "City", "Country", "IATA", "ICAO", "Latitude", "Longitude", 
+    column_names = ["Airport ID", "Name", "City", "Country", "IATA", "ICAO", "Latitude", "Longitude", 
                "Altitude", "Timezone", "DST", "Tz Database Timezone", "Type", "Source"]
     
     try:
-        df = pd.read_csv("airports_data.csv", names=columns, header=None)
+        df = pd.read_csv("airports_data.csv", names=column_names, header=None)
     except Exception as e:
-        df = None
+        raise RuntimeError("airports_data does not exist or is not in the current directory. Make sure you have run create_airport_data.py to generate the file.")
 
     @staticmethod
-    def _get_airport_info(airport_code: str, column: str):
+    def _get_airport_info(airport_code: str, column_name: str):
         '''
         Helper method to retrieve airport information by code.
 
@@ -27,16 +27,16 @@ class AirportData:
             RuntimeError: If the airport data file is missing or empty.
             ValueError: If the airport code is not found or the requested value is missing.
         '''
-        if AirportData.df is None or AirportData.df.empty:
-            raise RuntimeError("airports_data is not available. Check if the file exists and is correctly formatted.")
+        if AirportData.df.empty:
+            raise RuntimeError("airports_data is empty. Check if the file exists and is correctly formatted.")
 
         airport = AirportData.df[(AirportData.df["IATA"] == airport_code) | (AirportData.df["ICAO"] == airport_code)]
         if airport.empty:
-            raise ValueError(f"Airport code '{airport_code}' not found.")
+            raise ValueError(f"Airport code '{airport_code}' not found in airports_data.")
 
-        value = airport.iloc[0][column]
+        value = airport.iloc[0][column_name]
         if pd.isna(value) or value == "":
-            raise ValueError(f"Information for '{column}' is missing for airport code '{airport_code}'.")
+            raise ValueError(f"Information for '{column_name}' is missing or does not exist for airport code '{airport_code}'.")
 
         return value
 
