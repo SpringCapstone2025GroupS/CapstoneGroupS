@@ -7,7 +7,7 @@ class AirportData:
                "Altitude", "Timezone", "DST", "Tz Database Timezone", "Type", "Source"]
     
     try:
-        df = pd.read_csv("airports_data.csv", names=column_names, header=None)
+        df = pd.read_csv("airports.dat", names=column_names, header=None)
     except Exception as e:
         raise RuntimeError("airports_data does not exist or is not in the current directory. Make sure you have run create_airport_data.py to generate the file.")
 
