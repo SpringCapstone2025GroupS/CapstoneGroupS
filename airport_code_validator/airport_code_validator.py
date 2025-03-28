@@ -22,7 +22,7 @@ class AirportCodeValidator:
             False: Airport outside Continental United States, or does not exist.
         """
         package_dir = os.path.dirname(__file__)
-        airports_file = os.path.join(package_dir, "airports.dat")
+        airports_file = os.path.join(package_dir, "airports_data.csv")
 
         columns = ["Airport ID", "Name", "City", "Country", "IATA", "ICAO", "Latitude", "Longitude", "Altitude", "Timezone", "DST", "Tz Database Timezone", "Type", "Source"]
         df = pd.read_csv(airports_file, names=columns, header=None)
