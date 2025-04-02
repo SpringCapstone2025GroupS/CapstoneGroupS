@@ -3,7 +3,7 @@ class NotamFetcherBaseError(Exception):
     """Base exception for NotamFetcher errors."""
 
 class NotamFetcherUnexpectedError(NotamFetcherBaseError):
-    """Raised when an unexpected error occurs"""
+    """Raised when an unexpected error occurs which violates assumptions about the API's behavior."""
 
 class NotamFetcherRequestError(NotamFetcherBaseError):
     """Raised when NotamFetcher receives a request exception while fetching from the API"""
