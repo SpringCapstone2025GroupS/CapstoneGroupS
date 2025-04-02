@@ -1,4 +1,4 @@
-name: Run Unittest on PRs
+name: Run Pytest on PRs
 
 on:
   pull_request:
@@ -23,8 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests (test/ + tests/)
+      - name: Run tests
         run: |
-          PYTHONPATH=. python -m unittest discover -s test
-          PYTHONPATH=. python -m unittest discover -s tests
-        
+          pytest
+
