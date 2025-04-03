@@ -1,33 +1,6 @@
 import argparse
-import logging
+from airport_code_validator import AirportCodeValidator
 
-
-# Configure logging to track validation attempts and errors
-logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-
-
-class AirportCodeValidator:
-    """Validates airport codes based on a predefined list of valid airports."""
-
-    # Set of valid airport codes
-    VALID_AIRPORTS = {"JFK", "LAX", "ORD", "DFW", "ATL", "MIA"}
-
-    @staticmethod
-    def is_valid(airport_code: str):
-        """
-        Checks if the given airport code is valid.
-        
-        Args:
-            airport_code (str): A three-letter airport code (e.g., "JFK", "LAX").
-        
-        Raises:
-            ValueError: If the airport code is not found in the valid set.
-        """
-        if airport_code.upper() not in AirportCodeValidator.VALID_AIRPORTS:
-            logging.error(f"Invalid airport code entered: {airport_code}")
-            raise ValueError(f"Invalid airport code: {airport_code}")
-
-        logging.info(f"Validated airport code: {airport_code}")
 
 
 def get_flight_input():
