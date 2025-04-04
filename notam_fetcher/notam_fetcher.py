@@ -91,6 +91,7 @@ class NotamFetcher:
         for lat, long in coords:
             coord_notams = self.fetch_notams_by_latlong(lat, long, radius)
             new_notams = [notam for notam in coord_notams if notam.notam.id not in seen_notams]
+            all_notams.extend(new_notams)
             for notam in new_notams:
                 seen_notams.add(notam.notam.id)
                 
