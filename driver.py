@@ -3,6 +3,7 @@ import os
 import sys
 
 
+from airport_data.airport_data import AirportData
 from flight_input_parser import get_flight_input
 from airport_code_validator.airport_code_validator import AirportCodeValidator
 from flight_path.flight_path import FlightPath
@@ -54,9 +55,13 @@ def main():
     if CLIENT_SECRET is None:
         sys.exit("Error: CLIENT_SECRET not set in .env file")
     # Get user input
-    departure_airport, destination_airport = get_flight_input()
+    departure_airport_code, destination_airport_code = get_flight_input()
 
-    # Validate both airports
+    try:
+        departure_airport, destination_airport = AirportData.get_airport(departure_airport_code), AirportData.get_airport(destination_airport_code) 
+    except ValueError as e:
+        sys.exit(str(e))
+
     is_valid_dep = AirportCodeValidator.is_valid(departure_airport)
     is_valid_dest = AirportCodeValidator.is_valid(destination_airport)
 
@@ -66,8 +71,8 @@ def main():
     if not is_valid_dest:
         sys.exit(f"Invalid destination airport {destination_airport}. Please enter valid airport codes.")
 
-    print(f"Fetching Flights from {departure_airport.upper()} to {destination_airport.upper()}.")
-    flight_path = FlightPath(departure_code=departure_airport, destination_code=destination_airport)
+    print(f"Fetching Flights from {departure_airport.icao} to {destination_airport.icao}.")
+    flight_path = FlightPath(departure_code=departure_airport.icao, destination_code=destination_airport.icao)
     
     waypoints = flight_path.get_waypoints_by_gap(40)
     notam_fetcher = NotamFetcher(CLIENT_ID, CLIENT_SECRET)

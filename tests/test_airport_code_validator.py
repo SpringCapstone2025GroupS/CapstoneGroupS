@@ -1,27 +1,27 @@
 import pytest
-from unittest.mock import patch
-import pandas as pd
 from airport_code_validator.airport_code_validator import AirportCodeValidator
+from airport_data.airport_data import AirportData
+from airport_data.types import Airport
 
-@pytest.fixture
-def mock_airports():
-    """Fixture to mock pandas.read_csv"""
-    mock_data = pd.DataFrame({
-        "IATA": ["JFK", "ANC", "HNL", "YYZ"],
-        "ICAO": ["KJFK", "PANC", "PHNL", "CYYZ"],
-        "Country": ["United States", "United States", "United States", "Canada"],
-        "Tz Database Timezone": ["America/New_York", "America/Anchorage", "Pacific/Honolulu", "America/Toronto"]
-    })
-    with patch("pandas.read_csv", return_value=mock_data):
-        yield
+
+
+@pytest.mark.parametrize("airport, expected", [
+    (Airport(name='John F Kennedy International Airport', country='United States', iata='JFK', icao='KJFK', coordinates=(40.63980103, -73.77890015), elevation=13, tz_name='America/New_York'), True), 
+    (Airport(name='Ted Stevens Anchorage International Airport', country='United States', iata='ANC', icao='PANC', coordinates=(61.17440032958984, -149.99600219726562), elevation=152, tz_name='America/Anchorage'), False),
+    (Airport(name='Daniel K Inouye International Airport', country='United States', iata='HNL', icao='PHNL', coordinates=(21.32062, -157.924228), elevation=13, tz_name='Pacific/Honolulu'), False), # Hawaii
+    (Airport(name='Lester B. Pearson International Airport', country='Canada', iata='YYZ', icao='CYYZ', coordinates=(43.6772003174, -79.63059997559999), elevation=569, tz_name='America/Toronto'), False),
+])
+
+def test_airports(airport: Airport, expected: bool):
+    assert AirportCodeValidator.is_valid(airport) == expected
+
 
 @pytest.mark.parametrize("code, expected", [
     ("JFK", True), ("KJFK", True),   # Valid US
     ("ANC", False), ("PANC", False), # Alaska
     ("HNL", False), ("PHNL", False), # Hawaii
     ("YYZ", False), ("CYYZ", False), # Non-US
-    ("FAKE", False)                  # Non-existent
 ])
-
-def test_airports(mock_airports: None, code: str, expected: bool):
-    assert AirportCodeValidator.is_valid(code) == expected
+def test_airports_from_code(code: str, expected: bool):
+    airport = AirportData.get_airport(code)
+    assert AirportCodeValidator.is_valid(airport) == expected
