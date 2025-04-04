@@ -2,12 +2,17 @@
 import pandas as pd
 import os
 
+from .types import Airport
+
+from typing import Tuple
+
+
 class AirportData:
     column_names = ["Airport ID", "Name", "City", "Country", "IATA", "ICAO", "Latitude", "Longitude", 
                "Altitude", "Timezone", "DST", "Tz Database Timezone", "Type", "Source"]
     
     try:
-        df = pd.read_csv("airports.dat", names=column_names, header=None)
+        df = pd.read_csv("airports.dat", names=column_names, header=1)
     except Exception as e:
         raise RuntimeError("airports_data does not exist or is not in the current directory. Make sure you have run create_airport_data.py to generate the file.")
 
@@ -35,22 +40,57 @@ class AirportData:
             raise ValueError(f"Airport code '{airport_code}' not found in airports_data.")
 
         value = airport.iloc[0][column_name]
-        if pd.isna(value) or value == "":
-            raise ValueError(f"Information for '{column_name}' is missing or does not exist for airport code '{airport_code}'.")
-
+        if value == "\\N":
+            return None
         return value
 
     @staticmethod
-    def get_airport_latlong(airport_code: str):
+    def get_airport_latlong(airport_code: str) -> Tuple[float, float]:
         ''' Retrieves the latitude and longitude of an airport. '''
-        return AirportData._get_airport_info(airport_code, "Latitude"), AirportData._get_airport_info(airport_code, "Longitude")
+        return float(AirportData._get_airport_info(airport_code, "Latitude")), float(AirportData._get_airport_info(airport_code, "Longitude"))
 
     @staticmethod
-    def get_airport_country(airport_code: str):
+    def get_airport_country(airport_code: str) -> str:
         ''' Retrieves the country of an airport. '''
         return AirportData._get_airport_info(airport_code, "Country")
 
     @staticmethod
-    def get_airport_timezone(airport_code: str):
+    def get_airport_tz_name(airport_code: str) -> str | None:
         ''' Retrieves the timezone of an airport. '''
         return AirportData._get_airport_info(airport_code, "Tz Database Timezone")
+    
+    @staticmethod
+    def get_airport_name(airport_code: str) -> str | None:
+        ''' Retrieves the name of an airport. '''
+        return AirportData._get_airport_info(airport_code, "Name")
+
+    @staticmethod
+    def get_airport_IATA(airport_code: str) -> str | None:
+        ''' Retrieves the timezone of an airport. '''
+        return AirportData._get_airport_info(airport_code, "IATA")
+    
+    @staticmethod
+    def get_airport_ICAO(airport_code: str) -> str:
+        ''' Retrieves the ICAO of an airport. '''
+        return AirportData._get_airport_info(airport_code, "ICAO")
+    
+    @staticmethod
+    def get_airport_altitude(airport_code: str) -> int:
+        ''' Retrieves the altitude of an airport. '''
+        return AirportData._get_airport_info(airport_code, "Altitude")
+
+
+
+
+    @staticmethod
+    def get_airport(airport_code: str) -> Airport:
+        '''Returns an Airport object for the Airport code'''
+        return Airport(
+            name=AirportData.get_airport_name(airport_code),
+            country = AirportData.get_airport_country(airport_code),
+            IATA = AirportData.get_airport_IATA(airport_code),
+            ICAO = AirportData.get_airport_ICAO(airport_code),
+            coordinates= AirportData.get_airport_latlong(airport_code),
+            altitude = AirportData.get_airport_altitude(airport_code),
+            tz_name = AirportData.get_airport_tz_name(airport_code)
+        )
