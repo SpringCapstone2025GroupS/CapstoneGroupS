@@ -8,7 +8,6 @@ from geographiclib.geodesic import Geodesic
 from .exceptions import AirportNotFoundError, GapIsNotValid
 # to visualize
 import folium
-import os
 '''
 Flight Path Component.
 
@@ -26,7 +25,8 @@ Features:
 class FlightPath:
 
 
-    airport_data = pd.read_csv(f"{os.path.dirname(__file__)}/../airport_info/airports_data.csv")
+    columns = ["Airport ID", "Name", "City", "Country", "IATA", "ICAO", "Latitude", "Longitude", "Altitude", "Timezone", "DST", "Tz Database Timezone", "Type", "Source"]
+    airport_data = pd.read_csv("airports.dat", names=columns, header=None)
 
     def __init__(self, departure_code: str, destination_code: str):
         self.departure = self.__get_coordinates(departure_code)
@@ -39,7 +39,7 @@ class FlightPath:
         Translates Airport Codes to Coordinates.
 
         Args:
-            airport_code (str): Aiport Code (for now it is accepting both ICAC and IATA format)
+            airport_code (str): Aiport Code (for now it is accepting both ICAO and IATA format)
     
         Returns:
             (latitude, longitude) tuple(str): Tuple of latitude and longitude of the airport position
