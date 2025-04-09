@@ -63,3 +63,4 @@ def test_waypoints_on_great_circle(n):
         # Allow small margin of error because of floating point calculations
         assert abs(waypoint_bearing - expected_bearing) < 1.0, f"Waypoint {waypoint} deviates from the great-circle path."
 # re-run ci
+print("Triggering CI")
