@@ -5,7 +5,7 @@ from geopy import Point
 from collections import defaultdict
 from geopy.distance import geodesic
 from geographiclib.geodesic import Geodesic
-from exceptions import AirportNotFoundError, GapIsNotValid
+from flight_path.exceptions import AirportNotFoundError, GapIsNotValid
 # to visualize
 import folium
 '''
