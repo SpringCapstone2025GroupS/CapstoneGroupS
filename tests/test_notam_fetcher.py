@@ -1,6 +1,8 @@
+from datetime import datetime, timezone
 from pytest import MonkeyPatch
 import pytest
 import requests
+from notam_fetcher.api_schema import Classification, CoreNOTAMData, ICAOTranslation, Notam, NotamEvent, NotamType
 from notam_fetcher.exceptions import NotamFetcherUnauthenticatedError, NotamFetcherUnexpectedError, NotamFetcherValidationError
 from notam_fetcher.notam_fetcher import NotamFetcher
 
@@ -50,7 +52,6 @@ def mock_api_returns_invalid_json(monkeypatch: MonkeyPatch):
     monkeypatch.setattr(requests, "get", returnInvalid)
 
 
-
 @pytest.fixture
 def mock_unexpected_response(monkeypatch: MonkeyPatch):
     def returnUnexpected(*args: Any, **kwargs: Any) -> MockResponse:
@@ -71,7 +72,6 @@ def mock_unexpected_response(monkeypatch: MonkeyPatch):
         )
 
     monkeypatch.setattr(requests, "get", returnUnexpected)
-
 
 
 @pytest.fixture
@@ -152,6 +152,51 @@ def mock_empty_response(monkeypatch: MonkeyPatch):
     monkeypatch.setattr(requests, "get", returnEmpty)
 
 
+def test_fetch_notams_latlong_list(monkeypatch: pytest.MonkeyPatch):
+    """Test that deduplicated NOTAMs are returned"""
+    notam_fetcher = NotamFetcher("CLIENT_ID", "CLIENT_SECRET")
+
+
+    def mock_fetch_items_by_latlong(self: NotamFetcher,  lat: float, long: float, radius: float = 100.0):
+        """
+        Returns five notams with different notam_ids.
+        NOTAM_1_0_{lat}_{long}, NOTAM_1_1_{lat}_{long}, ..., NOTAM_1_4_{lat}_{long}
+        """
+        notam_response: list[CoreNOTAMData] = []
+
+        for i in range(5):
+            notam_example: Notam = Notam(
+                id=f"NOTAM_1_{i}_{lat}_{long}",
+                number="A0280/13",
+                type=NotamType.N,
+                location="FAOR",
+                text="EXAMPLE NOTAM TEXT",
+                classification=Classification.INTL,
+                account_id="FAORYNYX",
+                issued=datetime(2025, 1, 24, 16, 0, tzinfo=timezone.utc),
+                effective_start=datetime(2025, 1, 24, 15, 56, tzinfo=timezone.utc),
+                effective_end=datetime(2025, 4, 24, 23, 0, tzinfo=timezone.utc),
+                last_updated=datetime(2025, 1, 24, 16, 0, tzinfo=timezone.utc),
+            )
+
+            core_example = CoreNOTAMData(
+                notam_event = NotamEvent(scenario=6000),
+                notam=notam_example,
+                notam_translation=[ICAOTranslation(type="ICAO", formatted_text="Mock Notam Translation Text")]
+                )
+            
+            notam_response.append(core_example)
+
+        return notam_response
+    
+    monkeypatch.setattr(NotamFetcher, "fetch_notams_by_latlong", mock_fetch_items_by_latlong)
+    results = notam_fetcher.fetch_notams_by_latlong_list([(0.0, 0.0), (0.0, 0.0), (10.0, 10.0)])
+    assert(len(results) == 10)
+    unique_notam_ids = [core_notam.notam.id for core_notam in results]
+    assert(len(set(unique_notam_ids)) == 10)
+
+
+
 def test_fetch_notams_by_latlong_invalid_json(mock_api_returns_invalid_json: None):
     """Test that an invalid schema from the API raises validation error"""
     notam_fetcher = NotamFetcher("CLIENT_ID", "CLIENT_SECRET")
@@ -163,7 +208,6 @@ def test_fetch_notams_by_latlong_invalid_json(mock_api_returns_invalid_json: Non
         e.value.invalid_object.get("Invalid")
         == "This object does not match the schema and cannot be validated"
     )
-
 
 
 def test_fetch_notams_by_latlong_unexpected_response(mock_unexpected_response: None):
@@ -242,7 +286,7 @@ def test_notam_fetcher_page_size_constraints():
         valid_client.page_size=0
     with pytest.raises(ValueError):
         valid_client.page_size=1001
-    
+
 
 def test_request_params(monkeypatch: MonkeyPatch):
     """
@@ -301,5 +345,3 @@ def test_request_params(monkeypatch: MonkeyPatch):
         )
     monkeypatch.setattr(requests, "get", assert_airport_code_params_and_return_empty)
     client.fetch_notams_by_airport_code(TEST_AIRPORT_CODE)
-    
-    
