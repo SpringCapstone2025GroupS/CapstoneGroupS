@@ -23,7 +23,7 @@ Features:
 
 class FlightPath:
 
-    airport_data =pd.read_csv("../airport_info/airports_data.csv")
+    airport_data =pd.read_csv("airport_info/airports_data.csv")
 
     def __init__(self, departure_code: str, destination_code: str):
         self.departure = self.__get_coordinates(departure_code)
