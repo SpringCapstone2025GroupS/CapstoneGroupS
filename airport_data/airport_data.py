@@ -32,12 +32,11 @@ class AirportData:
 
         airport = AirportData.df[(AirportData.df["IATA"] == airport_code) | (AirportData.df["ICAO"] == airport_code)]
         if airport.empty:
-            raise ValueError(f"Airport code '{airport_code}' not found in airports_data.")
+            return None
 
         value = airport.iloc[0][column_name]
         if pd.isna(value) or value == "":
-            raise ValueError(f"Information for '{column_name}' is missing or does not exist for airport code '{airport_code}'.")
-
+            return None
         return value
 
     @staticmethod
