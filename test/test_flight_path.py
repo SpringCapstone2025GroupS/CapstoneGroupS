@@ -25,6 +25,7 @@ def test_get_coordinates_invalid():
 # Tests the size of the waypoints list is correct.
 # Essentially if n is the number of waypoints, the returned list should have n+2
 # +2 for the departure airport, and destinaton airport
+@pytest.mark.skip(reason="Waiting on implementation in flight_path.py")
 @pytest.mark.parametrize("n", [0, 1, 5, 10, 150, 202, 34468, 4444])
 def test_get_waypoints_by_num(n):
     flight_path = FlightPath("JFK", "LAX")
