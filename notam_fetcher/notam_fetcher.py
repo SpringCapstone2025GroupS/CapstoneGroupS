@@ -9,6 +9,7 @@ from .exceptions import (
     NotamFetcherUnauthenticatedError,
     NotamFetcherUnexpectedError,
     NotamFetcherValidationError,
+    NotamFetcherRateLimitError
 )
 
 
@@ -251,9 +252,14 @@ class NotamFetcher:
                 },
                 params=query_string,
             )
+
         except requests.exceptions.RequestException as e:
             raise NotamFetcherRequestError from e
 
+        # Check for a rate limit response
+        if response.status_code == 429:
+        # Assuming you have imported NotamFetcherRateLimitError from your exceptions module
+            raise NotamFetcherRateLimitError()        
         try:
             return response.json()
         except requests.exceptions.JSONDecodeError as e:
