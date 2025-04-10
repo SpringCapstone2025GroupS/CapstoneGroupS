@@ -1,6 +1,5 @@
-# type: ignore
-import pandas as pd
-import os
+
+from airport_data.types import Airport
 
 '''
 Airport Code Validator Component
@@ -10,21 +9,20 @@ Features:
 '''
 class AirportCodeValidator: 
     @staticmethod
-    def is_valid(airport_code: str):
+    def is_valid(airport: Airport):
         """
-        Validates if airport code is part of Continental United States
+        Validates if the airport is part of Continental United States
 
         Args:
-            airport_code (str): Airport Code Accepting Both IATA and ICAO Format
+            airport (Airport): Airport object.
 
         Returns:
             True: Valid Continental United States airport
-            False: Airport outside Continental United States, or does not exist.
+            False: Airport outside Continental United States.
         """
 
-        columns = ["Airport ID", "Name", "City", "Country", "IATA", "ICAO", "Latitude", "Longitude", "Altitude", "Timezone", "DST", "Tz Database Timezone", "Type", "Source"]
-        df = pd.read_csv("airports.dat", names=columns, header=None)
-        airport_details = df[(df["IATA"] == airport_code) | (df["ICAO"] == airport_code)]
-        if airport_details.empty or "United States" not in airport_details["Country"].values:
+
+        if airport.country != "United States":
             return False
-        return airport_details["Tz Database Timezone"].values[0] not in ["Pacific/Honolulu", "America/Anchorage"]
+        
+        return airport.tz_name not in ["Pacific/Honolulu", "America/Anchorage"]

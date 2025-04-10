@@ -30,12 +30,12 @@ class AirportCodeValidator:
         logging.info(f"Validated airport code: {airport_code}")
 
 
-def get_flight_input():
+def get_flight_input() -> tuple[str, str]:
     """
     Parses command-line arguments to retrieve departure and destination airport codes.
 
     Returns:
-        tuple: (departure_airport, destination_airport) as raw user input.
+        [str, str]: Airport codes provided by user.
     """
     parser = argparse.ArgumentParser(description="Enter departure and destination airport codes.")
     parser.add_argument("departure_airport", type=str, help="3-letter airport code for departure")
