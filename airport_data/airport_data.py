@@ -42,7 +42,13 @@ class AirportData:
     @staticmethod
     def get_airport_latlong(airport_code: str):
         ''' Retrieves the latitude and longitude of an airport. '''
-        return AirportData._get_airport_info(airport_code, "Latitude"), AirportData._get_airport_info(airport_code, "Longitude")
+        lat = AirportData._get_airport_info(airport_code, "Latitude")
+        lon = AirportData._get_airport_info(airport_code, "Longitude")
+    
+        if lat is None or lon is None:
+            return None
+
+        return lat, lon
 
     @staticmethod
     def get_airport_country(airport_code: str):
