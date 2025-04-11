@@ -1,84 +1,38 @@
-from typing import Optional
-from datetime import datetime, UTC
+from notam_fetcher.api_schema import Notam, PurposeType
 
-# Define NOTAM class
-class Notam:
-    def __init__(
-        self,
-        id: str,
-        number: str,
-        type: str,
-        issued: datetime,
-        selection_code: Optional[str],
-        location: str,
-        effective_start: datetime,
-        effective_end: datetime,
-        text: str,
-        maximumFL: Optional[str],
-        classification: str,
-        account_id: str,
-        last_updated: datetime,
-        icao_location: str,
-    ):
-        """ 
-        Creates a NOTAM object with all necessary attributes
-        Date objects are used directly for streamlined processing
-        """
-        self.id = id
-        self.number = number
-        self.type = type
-        self.issued = issued.replace(tzinfo=UTC)
-        self.selection_code = selection_code
-        self.location = location
-        self.effective_start = effective_start.replace(tzinfo=UTC)
-        self.effective_end = effective_end.replace(tzinfo=UTC)
-        self.text = text
-        self.maximumFL = maximumFL
-        self.classification = classification
-        self.account_id = account_id
-        self.last_updated = last_updated.replace(tzinfo=UTC)
-        self.icao_location = icao_location
-
-        # Compute and store a score for sorting/filtering
-        self.score = self.compute_score()
-
-    def get_max_flight_level(self) -> int:
-        """Convert maximumFL to an integer if it's valid, otherwise return 0."""
-        return int(self.maximumFL) if isinstance(self.maximumFL, str) and self.maximumFL.isdigit() else 0
-
-    def compute_score(self) -> float:
-        """
-        Score this NOTAM based on its duration, recency, and type.
-        Adjust the weights to fit the use case.
-        """
-        score = 0.0
-
-        score += self.score_duration()
-        score += self.score_recency()
-        score += self.score_type()
-
-        return score
-    
-    # this can be changed or removed if not needed
-    def score_duration(self) -> float:
-        return (self.effective_end - self.effective_start).total_seconds() / 3600
-    
-    # this can be changed or removed if not needed
-    def score_recency(self) -> float:
-        now = datetime.now(UTC)
-        age_hours = (now - self.issued).total_seconds() / 3600
-        return max(0, 24 - age_hours)
-    
-    def score_type(self) -> float:
-        t = self.type.upper()
-        return 50 if t == "R" else 30 if t == "N" else 10
-    
 class NotamSorter:
     def __init__(self, notams: list[Notam]):
         self.notams = notams
 
+    def score_by_purpose(self, notam: Notam) -> float:
+        """
+        Assigns a base score based on PurposeType.
+        N = 50, B = 25, O = 10, M = 5
+        """
+        if PurposeType.N in notam.purpose:
+            return 50
+        elif PurposeType.B in notam.purpose:
+            return 25
+        elif PurposeType.O in notam.purpose:
+            return 10
+        elif PurposeType.M in notam.purpose:
+            return 5
+        else:
+            return 0
+
+    def score(self, notam: Notam) -> float:
+        """
+        Calculates the total score for a NOTAM by combining multiple scoring functions.
+        """
+        total_score = 0.0
+        total_score += self.score_by_purpose(notam)
+        # Add other scoring functions here, e.g.:
+        # total_score += self.score_by_duration(notam)
+        # total_score += self.score_by_recency(notam)
+        return total_score
+
     def sort_by_score(self) -> list[Notam]:
         """
-        Sort the NOTAMs by their computed score in descending order.
+        Sorts the NOTAMs in descending order of their scores.
         """
-        return sorted(self.notams, key = lambda x: x.score, reverse=True)
+        return sorted(self.notams, key=self.score, reverse=True)
