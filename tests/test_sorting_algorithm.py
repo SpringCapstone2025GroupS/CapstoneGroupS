@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timedelta, UTC
-from notam_fetcher.api_schema import Notam, PurposeType, NotamType
+from notam_fetcher.api_schema import Notam, PurposeType, NotamType, Classification
 from sorting_algorithm.sorting_algorithm import NotamSorter
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def sample_notam_1():
         effective_start=now - timedelta(hours=1),
         effective_end=now + timedelta(hours=5),
         text="Runway 13L closed for emergency repairs",
-        classification="Safety",
+        classification=Classification.FDC,
         account_id="test",
         last_updated=now,
         icao_location="KJFK",
@@ -28,14 +28,14 @@ def sample_notam_2():
     return Notam(
         id="002",
         number="B5678/24",
-        type=NotamType.R,
+        type=NotamType.N,
         issued=now - timedelta(hours=10),
         purpose={PurposeType.B},
         location="LAX",
         effective_start=now - timedelta(hours=2),
         effective_end=now + timedelta(hours=3),
         text="Taxiway B closed for maintenance",
-        classification="Maintenance",
+        classification=Classification.FDC,
         account_id="test",
         last_updated=now,
         icao_location="KLAX",
@@ -47,33 +47,33 @@ def sample_notam_3():
     return Notam(
         id="003",
         number="C9101/24",
-        type=NotamType.O,
+        type=NotamType.N,
         issued=now - timedelta(hours=2),
         purpose={PurposeType.O},
         location="ORD",
         effective_start=now - timedelta(hours=1),
         effective_end=now + timedelta(hours=1),
         text="Obstacle near runway 22L",
-        classification="Obstacle",
+        classification=Classification.FDC,
         account_id="test",
         last_updated=now,
         icao_location="KORD",
     )
 
-def test_score_by_purpose(sample_notam_1, sample_notam_2, sample_notam_3):
+def test_score_by_purpose(sample_notam_1: Notam, sample_notam_2: Notam, sample_notam_3: Notam):
     sorter = NotamSorter([sample_notam_1, sample_notam_2, sample_notam_3])
     assert sorter.score_by_purpose(sample_notam_1) == 50  # PurposeType.N
     assert sorter.score_by_purpose(sample_notam_2) == 25  # PurposeType.B
     assert sorter.score_by_purpose(sample_notam_3) == 10  # PurposeType.O
 
-def test_score(sample_notam_1, sample_notam_2, sample_notam_3):
+def test_score(sample_notam_1: Notam, sample_notam_2: Notam, sample_notam_3: Notam):
     sorter = NotamSorter([sample_notam_1, sample_notam_2, sample_notam_3])
     assert sorter.score(sample_notam_1) == 50  # Only score_by_purpose is used
     assert sorter.score(sample_notam_2) == 25
     assert sorter.score(sample_notam_3) == 10
 
-def test_sort_by_score(sample_notam_1, sample_notam_2, sample_notam_3):
-    notams = [sample_notam_1, sample_notam_2, sample_notam_3]
+def test_sort_by_score(sample_notam_1: Notam, sample_notam_2: Notam, sample_notam_3: Notam):
+    notams = [sample_notam_3, sample_notam_1, sample_notam_2]
     sorter = NotamSorter(notams)
     sorted_notams = sorter.sort_by_score()
 
