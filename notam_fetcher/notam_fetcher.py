@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
-import requests
+import logging, requests
 
 from pydantic import ValidationError
 
@@ -12,9 +12,7 @@ from .exceptions import (
     NotamFetcherRateLimitError
 )
 
-
 from .api_schema import CoreNOTAMData, APIResponseSuccess, APIResponseError, APIResponseMessage 
-
 
 class NotamRequest:
     page_num: int = 1
@@ -31,6 +29,7 @@ class NotamAirportCodeRequest(NotamRequest):
     airport_code: str
 
 class NotamFetcher:
+    logger = logging.getLogger("NotamFetcher")
     FAA_API_URL = "https://external-api.faa.gov/notamapi/v1/notams"
     _page_size : int
 
@@ -46,8 +45,10 @@ class NotamFetcher:
     @page_size.setter
     def page_size(self, value: int):
         if value > 1000:
+            self.logger.error("page_size cannot be more than 1000")
             raise ValueError("page_size should not exceed 1000")
         if value <= 0:
+            self.logger.error("page_size cannot be less than zero")
             raise ValueError("page_size must be greater than 0")
         self._page_size = value
 
@@ -90,6 +91,7 @@ class NotamFetcher:
         seen_notams: set[str] = set()
 
         for lat, long in coords:
+            self.logger.info(f"Fetching NOTAMs from point ({lat},{long})")
             coord_notams = self.fetch_notams_by_latlong(lat, long, radius)
             new_notams = [notam for notam in coord_notams if notam.notam.id not in seen_notams]
             all_notams.extend(new_notams)
@@ -258,7 +260,8 @@ class NotamFetcher:
 
         # Check for a rate limit response
         if response.status_code == 429:
-        # Assuming you have imported NotamFetcherRateLimitError from your exceptions module
+            self.logger.warning( "HTTP 429 from FAA API, we may be rate-limited" )
+            # Assuming you have imported NotamFetcherRateLimitError from your exceptions module
             raise NotamFetcherRateLimitError()        
         try:
             return response.json()

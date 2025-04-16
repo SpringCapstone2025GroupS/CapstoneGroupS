@@ -1,3 +1,18 @@
+# Ignore generated schema files
+/scripts/schema-generation/collected/*
+/scripts/schema-generation/schema.json
+/scripts/schema-generation/quicktype_input.json
+/scripts/schema-generation/model_new_generated.py
+
+# Ignore logs generated while running
+output.log
+
+# Ignore generated CSV files for airport data (these should be generated manually before running)
+airport_info/airports_data.csv
+airport_info/bad_airports_data.csv
+
+# Begin auto-generated gitignore below:
+
 # Created by https://www.toptal.com/developers/gitignore/api/windows,linux,macos,vim,emacs,visualstudiocode,pydev,pycharm,java,python,venv,eclipse
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,linux,macos,vim,emacs,visualstudiocode,pydev,pycharm,java,python,venv,eclipse
 
@@ -558,8 +573,3 @@ $RECYCLE.BIN/
 *.html
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,vim,emacs,visualstudiocode,pydev,pycharm,java,python,venv,eclipse
-
-/scripts/schema-generation/collected/*
-/scripts/schema-generation/schema.json
-/scripts/schema-generation/quicktype_input.json
-/scripts/schema-generation/model_new_generated.py
