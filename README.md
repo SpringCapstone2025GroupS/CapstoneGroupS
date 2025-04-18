@@ -23,6 +23,24 @@ This project aims to design a system that:
 
 ---
 
+## :computer: Data File Downloads
+
+This project uses airport data from the FAA's Airports and Other Landing Facilities (APT) dataset. To obtain the necessary file:
+
+1. Visit the FAA NASR Suscription page: https://www.faa.gov/air_traffic/flight_info/aeronav/aero_data/NASR_Subscription/2025-03-20/.
+
+2. Scroll down to the list of downloadable files.
+
+3. Find and download the ZIP file labeled: Airports and Other Landing Facilities (APT).
+
+4. Extract the ZIP archive on your computer.
+
+5. From the etracted contents, locate the file named: APT_BASE.csv.
+
+6. Move or copy APT_BASE.csv to the root directory.
+
+---
+
 ## :telephone_receiver: Contact
 
 - [Brian Schettler](mailto:tanminivan@gmail.com) - Mentor
