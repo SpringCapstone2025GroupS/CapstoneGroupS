@@ -6,10 +6,10 @@ from airport_data.types import Airport
 
 
 @pytest.mark.parametrize("airport, expected", [
-    (Airport(name='John F Kennedy International Airport', country='United States', iata='JFK', icao='KJFK', coordinates=(40.63980103, -73.77890015), elevation=13, tz_name='America/New_York'), True), 
-    (Airport(name='Ted Stevens Anchorage International Airport', country='United States', iata='ANC', icao='PANC', coordinates=(61.17440032958984, -149.99600219726562), elevation=152, tz_name='America/Anchorage'), False),
-    (Airport(name='Daniel K Inouye International Airport', country='United States', iata='HNL', icao='PHNL', coordinates=(21.32062, -157.924228), elevation=13, tz_name='Pacific/Honolulu'), False), # Hawaii
-    (Airport(name='Lester B. Pearson International Airport', country='Canada', iata='YYZ', icao='CYYZ', coordinates=(43.6772003174, -79.63059997559999), elevation=569, tz_name='America/Toronto'), False),
+    (Airport(name='JOHN F KENNEDY INTL', country='US', iata='JFK', icao='KJFK', coordinates=(40.63980103, -73.77890015), elevation=13, state_name='New_York'), True), 
+    (Airport(name='TED STEVENS ANCHORAGE INTL', country='United States', iata='ANC', icao='PANC', coordinates=(61.17440032958984, -149.99600219726562), elevation=152, state_name='Alaska'), False), #Alaska
+    (Airport(name='DANIEL K INOUYE INTL', country='United States', iata='HNL', icao='PHNL', coordinates=(21.32062, -157.924228), elevation=13, state_name='Hawaii'), False), # Hawaii
+    (Airport(name='RAFAEL HERNANDEZ', country='Puerto Rico', iata='BQN', icao='TJBQ', coordinates=(18.49485222, -67.12944166), elevation=237.7, state_name=None), False), # Puerto Rico
 ])
 
 def test_airports(airport: Airport, expected: bool):

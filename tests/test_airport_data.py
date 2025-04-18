@@ -23,11 +23,11 @@ def test_get_airport_latlong(airport_code: str, expected: tuple[float, float]):
     assert result == expected
 
 @pytest.mark.parametrize("airport_code, expected", [
-    ("JFK", "United States"),
-    ("KJFK", "United States"),
-    ("LAX", "United States"),
-    ("ORD", "United States"),
-    ("MUGM", "Cuba"), 
+    ("JFK", "US"),
+    ("KJFK", "US"),
+    ("LAX", "US"),
+    ("ORD", "US"),
+    ("MBSC", "TC"), 
 ])
 def test_get_airport_country(airport_code: str, expected: str):
     """Test retrieving the country of an airport."""
@@ -35,21 +35,21 @@ def test_get_airport_country(airport_code: str, expected: str):
     assert result == expected
 
 @pytest.mark.parametrize("airport_code, expected", [
-    ("JFK", "America/New_York"),
-    ("KJFK", "America/New_York"),
-    ("LAX", "America/Los_Angeles"),
-    ("ORD", "America/Chicago"),
-    ("MUGM", None),  
+    ("JFK", "NEW YORK"),
+    ("KJFK", "NEW YORK"),
+    ("LAX", "CALIFORNIA"),
+    ("ORD", "CHICAGO"),
+    ("MBSC", None),  
 ])
 def test_get_airport_tz_name(airport_code: str, expected: str):
-    """Test retrieving the timezone of an airport."""
-    result = AirportData.get_airport_tz_name(airport_code)
+    """Test retrieving the state name of an airport."""
+    result = AirportData.get_airport_state_name(airport_code)
     assert result == expected
 
 @pytest.mark.parametrize("airport_code, expected", [
-    ("JFK", "John F Kennedy International Airport"),
-    ("KJFK", "John F Kennedy International Airport"),
-    ("MUGM", "Leeward Point Field"),  
+    ("JFK", "JOHN F KENNEDY INTL"),
+    ("KJFK", "JOHN F KENNEDY INTL"),
+    ("MBSC", "SOUTH CAICOS INTL"),  
 ])
 def test_get_airport_name(airport_code: str, expected: str):
     """Test retrieving the airport name of an airport."""
@@ -59,8 +59,7 @@ def test_get_airport_name(airport_code: str, expected: str):
 @pytest.mark.parametrize("airport_code, expected", [
     ("JFK", "JFK"),
     ("KJFK", "JFK"),
-    ("MUGM", "NBW"),
-    ("CYAV", None) 
+    ("MBSC", None) 
 ])
 def test_get_airport_IATA(airport_code: str, expected: str):
     """Test retrieving the IATA of an airport."""
@@ -71,7 +70,7 @@ def test_get_airport_IATA(airport_code: str, expected: str):
 @pytest.mark.parametrize("airport_code, expected", [
     ("JFK", "KJFK"),
     ("KJFK", "KJFK"),
-    ("MUGM", "MUGM"),  
+    ("MBSC", "MBSC"),  
 ])
 def test_get_airport_ICAO(airport_code: str, expected: str):
     """Test retrieving the ICAO of an airport."""
@@ -80,9 +79,9 @@ def test_get_airport_ICAO(airport_code: str, expected: str):
 
 @pytest.mark.parametrize("airport_code, expected", [
     ("JFK", 13),
-    ("MUGM", 56),  
+    ("MBSC", 9),  
 ])
-def test_get_airport_altitude(airport_code: str, expected: str):
+def test_get_airport_altitude(airport_code: str, expected: int):
     """Test retrieving the altitude of an airport."""
     result = AirportData.get_airport_elevation(airport_code)
     assert result == expected
@@ -90,13 +89,13 @@ def test_get_airport_altitude(airport_code: str, expected: str):
 
 def test_get_airport():
     jfk_expected = Airport(
-        name="John F Kennedy International Airport",
-        country="United States",
+        name="JOHN F KENNEDY INTL",
+        country="US",
         iata="JFK",
         icao="KJFK",
         coordinates=(40.63980103, -73.77890015),
         elevation=13,
-        tz_name="America/New_York",
+        state_name="NEW YORK",
     )
 
     jfk_airport = AirportData.get_airport('JFK')
