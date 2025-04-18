@@ -6,8 +6,8 @@ from typing import Tuple
 class Airport:
     name: str
     country: str
-    iata: str | None
-    icao: str
+    iata: str
+    icao: str | None
     coordinates: Tuple[float, float]
     elevation: int
-    tz_name: str | None
+    state_name: str | None
