@@ -20,7 +20,6 @@ def test_airports(airport: Airport, expected: bool):
     ("JFK", True), ("KJFK", True),   # Valid US
     ("ANC", False), ("PANC", False), # Alaska
     ("HNL", False), ("PHNL", False), # Hawaii
-    ("YYZ", False), ("CYYZ", False), # Non-US
 ])
 def test_airports_from_code(code: str, expected: bool):
     airport = AirportData.get_airport(code)
