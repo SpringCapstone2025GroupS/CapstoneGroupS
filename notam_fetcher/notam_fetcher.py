@@ -1,3 +1,4 @@
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any
 import logging, requests
@@ -51,7 +52,7 @@ class NotamFetcher:
             self.logger.error("page_size cannot be less than zero")
             raise ValueError("page_size must be greater than 0")
         self._page_size = value
-
+    
     def fetch_notams_by_airport_code(self, airport_code: str):
         """
         Fetches ALL notams for a particular airport code.
@@ -71,12 +72,12 @@ class NotamFetcher:
 
         return self._fetch_all_notams(request)
 
-    def fetch_notams_by_latlong_list(self, coords: list[tuple[float, float]],  radius: float = 100.0):
+    def fetch_notams_by_latlong_list(self, waypoints: list[tuple[float, float]],  radius: float = 100.0):
         """
-        Fetches ALL distinct notams for each (latitude, longitude) coordinate..
+        Fetches ALL distinct notams for each (latitude, longitude) waypoint..
 
         Args:
-            coords (list[(float, float)]): The coordinate list to fetch NOTAMs from.
+            waypoints (list[(float, float)]): The waypoints list to fetch NOTAMs from.
             radius (float): The location radius criteria in nautical miles. (max:100)
 
         Returns:
@@ -87,13 +88,32 @@ class NotamFetcher:
             NotamFetcherRequestError: If a requests error occurs while fetching from the API.
             ValueError: If the radius is less than or equal to 0 or greater than 100.
         """
+        requests_completed = 0
+        def on_complete(lat: float, long: float):
+            """
+            returns _on_complete with request context (lat, long).
+            """
+            def _on_complete(_: Future[list[CoreNOTAMData]]):
+                nonlocal requests_completed
+                requests_completed += 1
+                
+                self.logger.info(f"Fetched NOTAMs at ({lat}, {long}), request "
+                        f"{requests_completed}/{len(waypoints)} "
+                        f"({100*requests_completed/len(waypoints):.2f}% complete)")
+            return _on_complete
+
+        futures : list[Future[list[CoreNOTAMData]]] = []
+        with ThreadPoolExecutor(max_workers=30) as executor:
+            for lat, long in waypoints:
+                self.logger.info(f"Fetching NOTAMs at ({lat}, {long})")
+                future = executor.submit(self.fetch_notams_by_latlong, lat, long, radius)
+                future.add_done_callback(on_complete(lat, long))
+                futures.append(future)
+
         all_notams: list[CoreNOTAMData] = []
         seen_notams: set[str] = set()
-
-        for lat, long in coords:
-            self.logger.info(f"Fetching NOTAMs from point ({lat},{long})")
-            coord_notams = self.fetch_notams_by_latlong(lat, long, radius)
-            new_notams = [notam for notam in coord_notams if notam.notam.id not in seen_notams]
+        for future in futures:
+            new_notams = [notam for notam in future.result() if notam.notam.id not in seen_notams]
             all_notams.extend(new_notams)
             for notam in new_notams:
                 seen_notams.add(notam.notam.id)

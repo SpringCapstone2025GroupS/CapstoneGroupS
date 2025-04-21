@@ -351,7 +351,7 @@ def test_request_params(monkeypatch: MonkeyPatch):
     client.fetch_notams_by_airport_code(TEST_AIRPORT_CODE)
 
 @pytest.fixture
-def mock_rate_limit_response(monkeypatch):
+def mock_rate_limit_response(monkeypatch: MonkeyPatch):
     """Fixture to mock the API returning a 429 status code"""
 
     def returnRateLimit(*args: Any, **kwargs: Any) -> MockResponse:
@@ -360,7 +360,7 @@ def mock_rate_limit_response(monkeypatch):
     monkeypatch.setattr("requests.get", returnRateLimit)
 
 
-def test_fetch_notams_by_airport_code_rate_limit(mock_rate_limit_response):
+def test_fetch_notams_by_airport_code_rate_limit(mock_rate_limit_response: None):
     """Test that a rate limit error (429) correctly raises NotamFetcherRateLimitError
         When called on fetch_notam_by_airport_code"""
     notam_fetcher = NotamFetcher("CLIENT_ID", "CLIENT_SECRET")
@@ -369,7 +369,7 @@ def test_fetch_notams_by_airport_code_rate_limit(mock_rate_limit_response):
         notam_fetcher.fetch_notams_by_airport_code("JFK")
 
 
-def test_fetch_notams_by_latlong_rate_limit(mock_rate_limit_response):
+def test_fetch_notams_by_latlong_rate_limit(mock_rate_limit_response: None):
     """Test that a rate limit error (429) correctly raises NotamFetcherRateLimitError
         When called on fetch_notams_by_latlong"""
     notam_fetcher = NotamFetcher("CLIENT_ID", "CLIENT_SECRET")
