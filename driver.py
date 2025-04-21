@@ -8,6 +8,7 @@ from flight_path.flight_path import FlightPath
 from notam_fetcher import NotamFetcher
 from notam_fetcher.api_schema import CoreNOTAMData, Notam
 from notam_fetcher.exceptions import NotamFetcherRequestError, NotamFetcherUnauthenticatedError
+from notam_printer.notam_printer import NotamPrinter
 
 log_format_string = '%(asctime)s [%(name)s] [%(levelname)s] %(message)s'
 log_formatter = logging.Formatter(log_format_string)
@@ -23,14 +24,6 @@ logging.getLogger().addHandler(log_file_handler)
 logging.getLogger('urllib3.connectionpool').setLevel(logging.INFO)
 
 logger = logging.getLogger("driver")
-
-class NotamPrinter:
-    """
-    Temporary NotamPrinter Stub
-    """
-    def print_notams(self, notams: list[Notam]):
-        for notam in notams:
-            print(notam.text)
 
 class NotamSorter:
     """
@@ -112,7 +105,7 @@ def main():
     sorter = NotamSorter(notams)
 
     sorted_notams = sorter.sort()
-    printer = NotamPrinter()
+    printer = NotamPrinter(max_lines=3)
     printer.print_notams(sorted_notams)
 
 if __name__ == "__main__":
