@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import logging, os, sys, time
 
 from airport_data.airport_data import AirportData
-from flight_input_parser import get_flight_input
+from flight_input_parser.flight_input_parser import FlightInputParser
 from airport_code_validator.airport_code_validator import AirportCodeValidator
 from flight_path.flight_path import FlightPath
 from notam_fetcher import NotamFetcher
@@ -64,7 +64,7 @@ def main():
     if CLIENT_SECRET is None:
         sys.exit("Error: CLIENT_SECRET not set in .env file")
     # Get user input
-    departure_airport_code, destination_airport_code = get_flight_input()
+    departure_airport_code, destination_airport_code = FlightInputParser.get_flight_input()
 
     try:
         departure_airport, destination_airport = AirportData.get_airport(departure_airport_code), AirportData.get_airport(destination_airport_code) 
