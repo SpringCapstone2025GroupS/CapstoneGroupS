@@ -72,9 +72,9 @@ def main():
 
     if not is_valid_dest:
         sys.exit(f"Invalid destination airport {destination_airport}. Please enter valid airport codes.")
-
+    
     logger.info(f"Fetching Flights from {departure_airport.icao} to {destination_airport.icao}")
-    flight_path = FlightPath(departure_code=departure_airport.icao, destination_code=destination_airport.icao)
+    flight_path = FlightPath(departure_airport, destination_airport)
     
     waypoints = flight_path.get_waypoints_by_gap(40)
     notam_fetcher = NotamFetcher(CLIENT_ID, CLIENT_SECRET)
