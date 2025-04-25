@@ -6,7 +6,6 @@ from typing import List
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from notam_printer.notam_printer import Notam, NotamPrinter
 
-
 @pytest.fixture
 def sample_notams():
     return [
@@ -60,11 +59,55 @@ def sample_notams():
         )
     ]
 
-def test_format_notams(sample_notams: List[Notam]):
+def test_negative_max_lines():
+    with pytest.raises(ValueError):
+        printer = NotamPrinter(max_lines=-1)
+
+def test_zero_max_lines():
+    with pytest.raises(ValueError):
+        printer = NotamPrinter(max_lines=0)
+
+def test_print_max_lines(sample_notams: List[Notam]):
+    notam = sample_notams[0]
+    # six lines total
+    notam.text="test\nmultiline\nnotam\nwith\nmany\nnewlines"
+    printer = NotamPrinter(max_lines=3)
+    # three lines + '...'
+    assert(len(printer.print_notam(notam).split('\n')) == 4)
+
+def test_print_max_lines_more_than_max(sample_notams: List[Notam]):
+    notam = sample_notams[0]
+    # six lines total
+    notam.text="test\nmultiline\nnotam\nwith\nmany\nnewlines"
+    printer = NotamPrinter(max_lines=999)
+    # not 7 because we don't output '...' if we don't truncate anything
+    assert(len(printer.print_notam(notam).split('\n')) == 6)
+
+def test_max_lines_is_none(sample_notams: List[Notam]):
+    notam = sample_notams[0]
+    # six lines total
+    notam.text="test\nmultiline\nnotam\nwith\nmany\nnewlines"
+    printer = NotamPrinter(max_lines=None)
+    # not 7 because we don't output '...' if we don't truncate anything
+    assert(len(printer.print_notam(notam).split('\n')) == 6)
+    # the full text should also be printed
+    assert(len(printer.print_notam(notam)) == len(notam.text))
+
+def test_print_by_default(sample_notams: List[Notam]):
+    notam = sample_notams[0]
+    # six lines total
+    notam.text="test\nmultiline\nnotam\nwith\nmany\nnewlines"
     printer = NotamPrinter()
+    # not 7 because we don't output '...' if we don't truncate anything
+    assert(len(printer.print_notam(notam).split('\n')) == 6)
+    # the full text should also be printed
+    assert(len(printer.print_notam(notam)) == len(notam.text))
+
+def test_print_all_fields(sample_notams: List[Notam]):
+    printer = NotamPrinter(print_all_fields=True)
     # Assertions to format for each notam in the list.
     for notam in sample_notams:
-        formatted_notam = printer.formatNotam(notam)
+        formatted_notam = printer.print_notam(notam)
         assert "ID: " + notam.id in formatted_notam
         assert "Number: " + notam.number in formatted_notam
         assert "Type: " + notam.type in formatted_notam
@@ -75,7 +118,7 @@ def test_format_notams(sample_notams: List[Notam]):
         assert "Text: " + notam.text in formatted_notam
 
 def test_print_notams(sample_notams: List[Notam], capsys: CaptureFixture[str]):
-    printer = NotamPrinter()
+    printer = NotamPrinter(print_all_fields=True)
     printer.print_notams(sample_notams)
 
     # Capture printed output.

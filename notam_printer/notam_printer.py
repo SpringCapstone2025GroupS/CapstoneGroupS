@@ -57,7 +57,34 @@ class Notam:
         self.icao_location = icao_location
 
 class NotamPrinter:
-    def formatNotam(self, notam: Notam) -> str:
+
+    max_lines = None
+    print_all_fields = False
+
+    def __init__(self, max_lines: None|int=None, print_all_fields=False):
+        if max_lines is not None and int(max_lines) <= 0:
+            raise ValueError("max_lines must be a postive, non-zero integer")
+        self.max_lines = max_lines
+        self.print_all_fields = print_all_fields
+
+    def print_notam(self, notam: Notam) -> str:
+        if self.print_all_fields:
+            return self.print_all_notam_fields(notam)
+        elif self.max_lines:
+            return self.print_notam_text(notam, self.max_lines)
+        else:
+            return self.print_notam_text(notam)
+
+    def print_notam_text(self, notam: Notam, max_lines: None|int =None) -> str:
+        if max_lines:
+            return '\n'.join(notam.text.split('\n')[:max_lines]) + ('\n...' if len(notam.text.split('\n')) > max_lines else "" )
+        else:
+            return notam.text
+
+    def print_separator(self):
+        return "-"*80
+
+    def print_all_notam_fields(self, notam: Notam) -> str:
         """
         Formats a Notam object into a legible string representation.
 
@@ -83,8 +110,7 @@ class NotamPrinter:
             f"Account ID: {notam.account_id}\n"
             f"Last Updated: {notam.last_updated}\n"
             f"ICAO Location: {notam.icao_location}\n"
-            f"Text: {notam.text}\n"
-            f"{'-' * 40}"
+            f"Text: {notam.text}"
         )
 
     def print_notams(self, notams: List[Notam]):
@@ -98,8 +124,6 @@ class NotamPrinter:
 
         console = Console()
         for notam in notams:
-            console.print(self.formatNotam(notam))
-            console.print()
-            console.print("-" * 80)
-            console.print()
-            
+            console.print(self.print_notam(notam))
+            console.print(self.print_separator())
+
