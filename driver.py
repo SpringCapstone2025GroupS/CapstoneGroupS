@@ -7,7 +7,7 @@ from airport_code_validator.airport_code_validator import AirportCodeValidator
 from flight_path.flight_path import FlightPath
 from notam_fetcher import NotamFetcher
 from notam_fetcher.api_schema import CoreNOTAMData, Notam
-from notam_fetcher.exceptions import NotamFetcherRequestError, NotamFetcherUnauthenticatedError
+from notam_fetcher.exceptions import NotamFetcherRateLimitError, NotamFetcherRequestError, NotamFetcherUnauthenticatedError
 from notam_printer.notam_printer import NotamPrinter
 
 log_format_string = '%(asctime)s [%(name)s] [%(levelname)s] %(message)s'
@@ -80,23 +80,18 @@ def main():
     notam_fetcher = NotamFetcher(CLIENT_ID, CLIENT_SECRET)
     
     all_notams : list[CoreNOTAMData] = []
-    fetch_count = 1
     start_time = time.perf_counter()
-    for lat, long in waypoints:
-        try:
-            logger.info(f"Fetching NOTAMs at ({lat}, {long}), request "
-                    f"{fetch_count}/{len(waypoints)} "
-                    f"({100*fetch_count/len(waypoints):.2f}% complete)")
-            fetched_notams = notam_fetcher.fetch_notams_by_latlong(lat, long, 30)
-            all_notams.extend(fetched_notams)
-            logger.info(f"Fetched {len(fetched_notams)} NOTAMs (total "
-                    f"non-deduplicated NOTAMs so far: {len(all_notams)})")
-            fetch_count += 1
-        except NotamFetcherUnauthenticatedError:
-            sys.exit("Invalid client_id or secret.")
-        except NotamFetcherRequestError:
-            sys.exit("Failed to retrieve NOTAMs due to a network issue.")
-
+    try:
+        all_notams = notam_fetcher.fetch_notams_by_latlong_list(waypoints, 30)
+    except NotamFetcherUnauthenticatedError:
+        logging.error("Invalid client_id or secret.")
+        sys.exit("Invalid client_id or secret.")
+    except NotamFetcherRequestError:
+        logging.error("Failed to retrieve NOTAMs due to a network issue.")
+        sys.exit("Failed to retrieve NOTAMs due to a network issue.")
+    except NotamFetcherRateLimitError:
+        logging.error("Failed to retrieve NOTAMs due to rate limits.")
+        sys.exit("Failed to retrieve NOTAMs due to rate limits.") 
     end_time = time.perf_counter()
 
     notams = [notam.notam for notam in all_notams]
