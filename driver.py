@@ -9,6 +9,8 @@ from notam_fetcher import NotamFetcher
 from notam_fetcher.api_schema import CoreNOTAMData, Notam
 from notam_fetcher.exceptions import NotamFetcherRateLimitError, NotamFetcherRequestError, NotamFetcherUnauthenticatedError
 from notam_printer.notam_printer import NotamPrinter
+from sorting_algorithm.sorting_algorithm import NotamSorter
+
 
 log_format_string = '%(asctime)s [%(name)s] [%(levelname)s] %(message)s'
 log_formatter = logging.Formatter(log_format_string)
@@ -24,15 +26,6 @@ logging.getLogger().addHandler(log_file_handler)
 logging.getLogger('urllib3.connectionpool').setLevel(logging.INFO)
 
 logger = logging.getLogger("driver")
-
-class NotamSorter:
-    """
-    Temporary NotamSorter Stub
-    """
-    def __init__(self, notams: list[Notam]) -> None:
-        self.notams = notams
-    def sort(self) -> list[Notam]:
-        return self.notams 
 
 def main():
     """
