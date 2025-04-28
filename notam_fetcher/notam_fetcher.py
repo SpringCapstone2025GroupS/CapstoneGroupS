@@ -1,5 +1,6 @@
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
+import time
 from typing import Any
 import logging, requests
 
@@ -29,15 +30,18 @@ class NotamLatLongRequest(NotamRequest):
 class NotamAirportCodeRequest(NotamRequest):
     airport_code: str
 
-class NotamFetcher:
+class NotamFetcher:    
     logger = logging.getLogger("NotamFetcher")
     FAA_API_URL = "https://external-api.faa.gov/notamapi/v1/notams"
     _page_size : int
+    timeout: int # max time to wait before an exception is thrown
+    MAX_BACKOFF_TIME: int = 30 # maximum time to wait between throttled requests
 
-    def __init__(self, client_id: str, client_secret: str, page_size: int = 1000):
+    def __init__(self, client_id: str, client_secret: str, page_size: int = 1000, timeout: int=60):
         self.client_id = client_id
         self.client_secret = client_secret
         self.page_size=page_size
+        self.timeout = timeout
 
     @property
     def page_size(self):
@@ -192,8 +196,28 @@ class NotamFetcher:
             NotamFetcherValidationError: If the response was not an Success, Error, or Message response.
             ValueError: If the request request page_num is less than 1.
         """
+        time_start = time.monotonic()
+        attempts = 0
+        data = None
+        while(time.monotonic() - time_start < self.timeout):
+            try:
+                data = self._fetch_notams_raw(request)
+                break
+            except NotamFetcherRateLimitError:
+                attempts += 1
+                time_to_sleep = min(attempts**2, self.MAX_BACKOFF_TIME) # sleep at most MAX_BACKOFF_TIME
+                time_until_timeout = self.timeout - (time.monotonic() - time_start)
+                
+                if isinstance(request, NotamLatLongRequest):
+                    location = f"({request.lat}, {request.long})"
+                else:
+                    location = f"({request.airport_code})"
+                self.logger.info(f"Rate limited while fetching Notams at {location}."
+                                    f" {attempts} attempts made in {time.monotonic() - time_start:0.2f} seconds")
+                time.sleep(min(time_to_sleep, time_until_timeout)) # Don't sleep past the timeout
 
-        data = self._fetch_notams_raw(request)
+        if data is None:
+            raise NotamFetcherRateLimitError
 
         # the response dict can be an unvalidated APIResponseSuccess, APIResponseError, or APIResponseMessage
         # We try to validate the response as each type.
@@ -236,6 +260,7 @@ class NotamFetcher:
         Raises:
             NotamFetcherRequestError if a requests error occured.
             NotamFetcherUnexpectedError if the response was invalid JSON.
+            NotamFetcherRateLimitError if the response returned 429.
         """
         query_string = {}
 
