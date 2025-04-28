@@ -1,7 +1,7 @@
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any
-import logging, requests
+import logging, requests, time
 
 from pydantic import ValidationError
 
@@ -10,7 +10,8 @@ from .exceptions import (
     NotamFetcherUnauthenticatedError,
     NotamFetcherUnexpectedError,
     NotamFetcherValidationError,
-    NotamFetcherRateLimitError
+    NotamFetcherRateLimitError,
+    NotamFetcherTimeoutReached
 )
 
 from .api_schema import CoreNOTAMData, APIResponseSuccess, APIResponseError, APIResponseMessage 
@@ -33,11 +34,23 @@ class NotamFetcher:
     logger = logging.getLogger("NotamFetcher")
     FAA_API_URL = "https://external-api.faa.gov/notamapi/v1/notams"
     _page_size : int
+    timeout: int # max time to wait before an exception is thrown
+    MAX_BACKOFF_TIME: int = 30 # maximum time to wait between throttled requests
 
-    def __init__(self, client_id: str, client_secret: str, page_size: int = 1000):
+    def __init__(self, client_id: str, client_secret: str, page_size: int = 1000, timeout: int=60):
+        """
+        Initializes a NotamFetcher client.
+        
+        Args:
+            client_id (str): The client ID for authentication.
+            client_secret (str): The client secret for authentication.
+            page_size (int): The default page_size to use for API requests.
+            timeout (int): The max time to wait (in seconds) for fetch_notams_by_latlong_list to return before raising NotamFetcherTimeoutReached.
+        """
         self.client_id = client_id
         self.client_secret = client_secret
-        self.page_size=page_size
+        self.page_size = page_size
+        self.timeout = timeout
 
     @property
     def page_size(self):
@@ -87,6 +100,7 @@ class NotamFetcher:
             NotamFetcherUnauthenticatedError: If NotamFetcher has invalid client id or secret.
             NotamFetcherRequestError: If a requests error occurs while fetching from the API.
             ValueError: If the radius is less than or equal to 0 or greater than 100.
+            NotamFetcherTimeoutReached: If the request could not be completed before the Client's timeout.
         """
         requests_completed = 0
         def on_complete(lat: float, long: float):
@@ -103,10 +117,30 @@ class NotamFetcher:
             return _on_complete
 
         futures : list[Future[list[CoreNOTAMData]]] = []
+
+        time_start = time.monotonic()
+
+        def _fetch_notams_with_timeout(lat: float, long: float, radius: float):
+            nonlocal time_start
+            attempts = 0
+            while(time.monotonic() - time_start < self.timeout):
+                try:
+                    return self.fetch_notams_by_latlong(lat, long, radius)
+                except NotamFetcherRateLimitError:
+                    attempts += 1
+                    time_to_sleep = min(attempts**2, self.MAX_BACKOFF_TIME) # sleep at most MAX_BACKOFF_TIME
+                    time_until_timeout = self.timeout - (time.monotonic() - time_start)
+                    
+                    self.logger.warning(f"Rate limited while fetching Notams at ({lat}, {long})."
+                                        f" {attempts} attempts made."
+                                        f" {time.monotonic() - time_start:0.2f} seconds since start.")
+                    time.sleep(min(time_to_sleep, time_until_timeout)) # Don't sleep past the timeout
+            raise NotamFetcherTimeoutReached
+        
         with ThreadPoolExecutor(max_workers=30) as executor:
             for lat, long in waypoints:
                 self.logger.info(f"Fetching NOTAMs at ({lat}, {long})")
-                future = executor.submit(self.fetch_notams_by_latlong, lat, long, radius)
+                future = executor.submit(_fetch_notams_with_timeout, lat, long, radius)
                 future.add_done_callback(on_complete(lat, long))
                 futures.append(future)
 
@@ -236,6 +270,7 @@ class NotamFetcher:
         Raises:
             NotamFetcherRequestError if a requests error occured.
             NotamFetcherUnexpectedError if the response was invalid JSON.
+            NotamFetcherRateLimitError if the response returned 429.
         """
         query_string = {}
 

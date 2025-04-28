@@ -1,5 +1,5 @@
 from .notam_fetcher import NotamFetcher
-from .exceptions import NotamFetcherRequestError, NotamFetcherUnauthenticatedError, NotamFetcherUnexpectedError, NotamFetcherBaseError, NotamFetcherValidationError
+from .exceptions import NotamFetcherTimeoutReached, NotamFetcherRequestError, NotamFetcherUnauthenticatedError, NotamFetcherUnexpectedError, NotamFetcherBaseError, NotamFetcherValidationError
 
 
-__all__ = ["NotamFetcher", "NotamFetcherRequestError", "NotamFetcherUnauthenticatedError", "NotamFetcherUnexpectedError", "NotamFetcherBaseError", "NotamFetcherValidationError"]
+__all__ = ["NotamFetcher", "NotamFetcherTimeoutReached", "NotamFetcherRequestError", "NotamFetcherUnauthenticatedError", "NotamFetcherUnexpectedError", "NotamFetcherBaseError", "NotamFetcherValidationError"]

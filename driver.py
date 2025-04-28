@@ -70,7 +70,7 @@ def main():
     flight_path = FlightPath(departure_airport, destination_airport)
     
     waypoints = flight_path.get_waypoints_by_gap(40)
-    notam_fetcher = NotamFetcher(CLIENT_ID, CLIENT_SECRET)
+    notam_fetcher = NotamFetcher(CLIENT_ID, CLIENT_SECRET, timeout=300)
     
     all_notams : list[CoreNOTAMData] = []
     start_time = time.perf_counter()
