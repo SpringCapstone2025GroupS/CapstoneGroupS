@@ -77,7 +77,7 @@ def main():
     flight_path = FlightPath(departure_code=departure_airport.icao, destination_code=destination_airport.icao)
     
     waypoints = flight_path.get_waypoints_by_gap(40)
-    notam_fetcher = NotamFetcher(CLIENT_ID, CLIENT_SECRET)
+    notam_fetcher = NotamFetcher(CLIENT_ID, CLIENT_SECRET, timeout=600)
     
     all_notams : list[CoreNOTAMData] = []
     start_time = time.perf_counter()
@@ -92,6 +92,9 @@ def main():
     except NotamFetcherRateLimitError:
         logging.error("Failed to retrieve NOTAMs due to rate limits.")
         sys.exit("Failed to retrieve NOTAMs due to rate limits.") 
+    except TimeoutError:
+        logging.error("Failed to retrieve NOTAMs due to timeout limit.")
+        sys.exit("Failed to retrieve NOTAMs due to timeout limit.") 
     end_time = time.perf_counter()
 
     notams = [notam.notam for notam in all_notams]

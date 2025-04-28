@@ -1,4 +1,4 @@
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 import time
 from typing import Any
@@ -107,22 +107,32 @@ class NotamFetcher:
             return _on_complete
 
         futures : list[Future[list[CoreNOTAMData]]] = []
-        with ThreadPoolExecutor(max_workers=30) as executor:
+        executor = ThreadPoolExecutor(max_workers=30)
+        try:
             for lat, long in waypoints:
                 self.logger.info(f"Fetching NOTAMs at ({lat}, {long})")
                 future = executor.submit(self.fetch_notams_by_latlong, lat, long, radius)
                 future.add_done_callback(on_complete(lat, long))
                 futures.append(future)
+            done, not_done = wait(futures, timeout=self.timeout)
+            for f in not_done:
+                f.cancel()
 
-        all_notams: list[CoreNOTAMData] = []
-        seen_notams: set[str] = set()
-        for future in futures:
-            new_notams = [notam for notam in future.result() if notam.notam.id not in seen_notams]
-            all_notams.extend(new_notams)
-            for notam in new_notams:
-                seen_notams.add(notam.notam.id)
+            if not_done:
+                raise TimeoutError(f"Could not complete requests in {self.timeout} seconds.")
+
+            all_notams: list[CoreNOTAMData] = []
+            seen_notams: set[str] = set()
                 
-        return all_notams
+            for task in done:
+                new_notams = [notam for notam in task.result() if notam.notam.id not in seen_notams]
+                all_notams.extend(new_notams)
+                for notam in new_notams:
+                    seen_notams.add(notam.notam.id)
+    
+            return all_notams
+        finally:
+            executor.shutdown(wait=False, cancel_futures=True)
 
     def fetch_notams_by_latlong(self, lat: float, long: float, radius: float = 100.0):
         """
