@@ -1,12 +1,12 @@
 # type: ignore
 import logging
 from typing import Tuple, List
-import pandas as pd
 from geopy import Point
-from collections import defaultdict
 from geopy.distance import geodesic
 from geographiclib.geodesic import Geodesic
-from .exceptions import AirportNotFoundError, GapIsNotValid
+from .exceptions import GapIsNotValid
+from airport_data.airport_data import AirportData
+from airport_data.types import Airport
 # to visualize
 import folium
 
@@ -17,46 +17,21 @@ class FlightPath:
     This script calculates waypoints between two airports based on their ICAO/IATA codes.
 
     Features:
-        - Reads airport data from a CSV file. (This will need to be changed when merging with the driver!!!!)
         - Retrieves coordinates for given airport codes. (Private)
         - Computes equally spaced waypoints along a great-circle path. (We can choose how may points along the path we want)
         - Uses GeographicLib for precise bearing calculations. (precise just means not in a straight line. Instead, this library takes into consideration the curvature of the earth!)
 
     '''
-
-    columns = ["Airport ID", "Name", "City", "Country", "IATA", "ICAO", "Latitude", "Longitude", "Altitude", "Timezone", "DST", "Tz Database Timezone", "Type", "Source"]
-    airport_data = pd.read_csv("airports.dat", names=columns, header=None)
     logger = logging.getLogger("FlightPath")
 
-    def __init__(self, departure_code: str, destination_code: str):
-        self.departure = self.__get_coordinates(departure_code)
-        self.destination = self.__get_coordinates(destination_code)
+    def __init__(self, departure: Airport, destination: Airport):
+        self.departure_coords = departure.coordinates
+        self.destination_coords = destination.coordinates
         self.logger.info(f"Will be computing a flight path between "
-                f"{departure_code} ({self.departure[0]},{self.departure[1]}) and "
-                f"{destination_code} "
-                f"({self.destination[0]},{self.destination[1]})")
+                f"{departure.name} ({self.departure_coords[0]},{self.departure_coords[1]}) and "
+                f"{destination.name} "
+                f"({self.destination_coords[0]},{self.destination_coords[1]})")
         pass
-    
-
-    def __get_coordinates(self, airport_code) -> Tuple[float, float]:
-        """
-        Translates Airport Codes to Coordinates.
-
-        Args:
-            airport_code (str): Aiport Code (for now it is accepting both ICAO and IATA format)
-    
-        Returns:
-            (latitude, longitude) tuple(str): Tuple of latitude and longitude of the airport position
-        """
-        row = self.airport_data.loc[(self.airport_data["ICAO"] == airport_code) | (self.airport_data["IATA"] == airport_code)] # This can be changed to only ICAC in the future when merging.
-
-        if row.empty:
-            raise AirportNotFoundError(f"Airport code '{airport_code}' not found in the dataset.")
-        
-        latitude = row.iloc[0]["Latitude"]
-        longitude = row.iloc[0]["Longitude"]
-
-        return latitude, longitude
     
     
     def get_waypoints_by_num(self, n: int) -> List[Tuple[float, float]]:
@@ -73,8 +48,8 @@ class FlightPath:
             list: A list of tuples containing the latitude and longitude of each waypoint, including the departure and destination airport
         """
         # turn the coords into points using geopy library
-        depart = Point(self.departure[0], self.departure[1])
-        dest = Point(self.destination[0], self.destination[1])
+        depart = Point(self.departure_coords[0], self.departure_coords[1])
+        dest = Point(self.destination_coords[0], self.destination_coords[1])
         result = [(depart.latitude, depart.longitude)]
         
         # when dest == depart, we return the coordinates of the departure airport
@@ -85,7 +60,7 @@ class FlightPath:
         total_dist = geodesic(depart, dest).miles # this is real world distance on earth, great-circle distance.
         step_size = total_dist/ (n+1)
         # get the direction of the two points, bearing (angle of the line)
-        bearing = Geodesic.WGS84.Inverse(self.departure[0], self.departure[1], self.destination[0], self.destination[1])
+        bearing = Geodesic.WGS84.Inverse(self.departure_coords[0], self.departure_coords[1], self.destination_coords[0], self.destination_coords[1])
 
         self.logger.debug(f"Computing {n} waypoints along route of length "
                 f"{total_dist:.3f} nm with step size of {step_size:.3f} nm")
@@ -115,8 +90,8 @@ class FlightPath:
         Returns:
             list: A list of tuples containing the latitude and longitude of each waypoint.
         """
-        depart = Point(self.departure[0], self.departure[1])
-        dest = Point(self.destination[0], self.destination[1])
+        depart = Point(self.departure_coords[0], self.departure_coords[1])
+        dest = Point(self.destination_coords[0], self.destination_coords[1])
 
         # Calculate total great-circle distance between departure and destination
         total_dist = geodesic(depart, dest).miles  
