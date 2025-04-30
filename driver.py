@@ -92,7 +92,7 @@ def main():
 
     sorter = NotamSorter(notams)
 
-    sorted_notams = sorter.sort()
+    sorted_notams = sorter.sort_by_score()
     printer = NotamPrinter(max_lines=3)
     printer.print_notams(sorted_notams)
 
