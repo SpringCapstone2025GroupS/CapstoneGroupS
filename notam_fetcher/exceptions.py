@@ -9,7 +9,7 @@ class NotamFetcherRequestError(NotamFetcherBaseError):
     """Raised when NotamFetcher receives a request exception while fetching from the API"""
 
 class NotamFetcherUnauthenticatedError(NotamFetcherBaseError):
-    """Raised when cliend_id or client_secret are invalid"""
+    """Raised when client_id or client_secret are invalid"""
 
 
 class NotamFetcherValidationError(NotamFetcherBaseError):
@@ -25,3 +25,6 @@ class NotamFetcherRateLimitError(NotamFetcherBaseError):
 
     def __init__(self):
         message = "Rate limit exceeded. Try again later."
+
+class NotamFetcherTimeoutReached(NotamFetcherBaseError):
+    """Raised when NotamFetcher is terminated early because it exceeded the timeout."""
