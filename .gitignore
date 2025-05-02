@@ -572,4 +572,7 @@ $RECYCLE.BIN/
 # Ignore all HTML files
 *.html
 
+# Ignore APT_BASE.csv
+APT_BASE.csv
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,vim,emacs,visualstudiocode,pydev,pycharm,java,python,venv,eclipse

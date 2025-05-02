@@ -22,7 +22,7 @@ class AirportCodeValidator:
         """
 
 
-        if airport.country != "United States":
+        if airport.country != "US":
             return False
         
-        return airport.tz_name not in ["Pacific/Honolulu", "America/Anchorage"]
+        return airport.state_name not in ["HAWAII", "ALASKA", "PUERTO RICO", "GUAM", "AMERICAN SAMOA", "N MARIANA ISLANDS", "PUERTO RICO-VIRGIN ISLANDS"]
