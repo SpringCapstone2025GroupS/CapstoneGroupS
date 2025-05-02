@@ -127,3 +127,36 @@ class NotamPrinter:
             console.print(self.print_notam(notam))
             console.print(self.print_separator())
 
+    # print in NOTAM in FAA format
+    def print_normal_format(self, notam: Notam) -> str:
+        """
+        Prints the NOTAM in FAA domestic format like:
+        OKC 12/060 KOKC RWY 17R PAPI U/S 202501061400-202505102355
+        """
+        start_dt = notam.effective_start
+        end_dt = notam.effective_end
+
+        return (
+            f"{notam.location} {notam.number} {notam.icao_location} "
+            f"{self._get_affected_area(notam)} {self._get_status(notam)} "
+            f"{start_dt.strftime('%Y%m%d%H%M')}-{end_dt.strftime('%Y%m%d%H%M')}"
+        )
+
+    def _get_affected_area(self, notam: Notam) -> str:
+        """
+        Tries to extract affected area like 'RWY 17R' from the text field.
+        """
+        for i, word in enumerate(notam.text.split()):
+            if word == "RWY" and i + 1 < len(notam.text.split()):
+                return f"RWY {notam.text.split()[i + 1]}"
+        return "RWY UNKNOWN"
+
+    def _get_status(self, notam: Notam) -> str:
+        """
+        Tries to detect status like 'U/S' (Unserviceable) or 'CLSD' (Closed).
+        """
+        if "U/S" in notam.text:
+            return "U/S"
+        elif "CLSD" in notam.text:
+            return "CLSD"
+        return "STATUS_UNKNOWN"

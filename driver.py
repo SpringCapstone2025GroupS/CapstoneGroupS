@@ -57,14 +57,14 @@ def main():
     except ValueError as e:
         sys.exit(str(e))
 
-    is_valid_dep = AirportCodeValidator.is_valid(departure_airport)
-    is_valid_dest = AirportCodeValidator.is_valid(destination_airport)
+  #BRB  is_valid_dep = AirportCodeValidator.is_valid(departure_airport)
+  #BRB   is_valid_dest = AirportCodeValidator.is_valid(destination_airport)
 
-    if not is_valid_dep:
-        sys.exit(f"Invalid departure airport {departure_airport}. Please enter valid airport codes.")
+#BRB if not is_valid_dep:
+ #BRB       sys.exit(f"Invalid departure airport {departure_airport}. Please enter valid airport codes.")
 
-    if not is_valid_dest:
-        sys.exit(f"Invalid destination airport {destination_airport}. Please enter valid airport codes.")
+ #BRB   if not is_valid_dest:
+ #BRB       sys.exit(f"Invalid destination airport {destination_airport}. Please enter valid airport codes.")
     
     logger.info(f"Fetching Flights from {departure_airport.icao} to {destination_airport.icao}")
     flight_path = FlightPath(departure_airport, destination_airport)
@@ -93,8 +93,10 @@ def main():
     sorter = NotamSorter(notams)
 
     sorted_notams = sorter.sort_by_score()
-    printer = NotamPrinter(max_lines=3)
-    printer.print_notams(sorted_notams)
+    printer = NotamPrinter()
+    # Print NOTAMs in normal FAA format (CAP-69)
+    for notam in sorted_notams[:5]:  # print first 5 as a sample
+        print(printer.print_normal_format(notam))
 
 if __name__ == "__main__":
     main()
