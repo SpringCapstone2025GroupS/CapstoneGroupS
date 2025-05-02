@@ -4,6 +4,7 @@ from typing import List, Optional
 from dataclasses import dataclass
 from geopy.distance import geodesic
 from notam_fetcher.api_schema import Notam, Coordinate
+from sorting_algorithm.sorting_algorithm import score
 
 # Helpter: Before filtering, extract coordinates from Notam String
 def parse_coords(coord_str: Optional[str]) -> Optional[tuple[float, float]]:
@@ -28,7 +29,7 @@ def parse_flight_level(fl: Optional[str]) -> Optional[int]:
 def filter_by_proximity (notams: List[Notam], ref_lat: float, ref_lon: float, max_distance_nm: float) -> List[Notam]:
     return [
         n for n in notams
-        if geodesic((ref_lat, ref_lon), (n.lat, n.lon)).nautical < max_distance_nm # replace n.lat and n.lon with actual lat/lon values of Notams.
+        if geodesic((ref_lat, ref_lon), (n.lat, n.lon)).nautical < max_distance_nm # TODO: replace n.lat and n.lon with actual lat/lon values of Notams.
     ]
 
 # Filter 2 - Flight Phase
@@ -45,9 +46,9 @@ def filter_by_flight_phase(notams: List[Notam], phase: str) -> List[Notam]
         return True
     return [n for n in notams if in_phase(n)]
 
-# Filter 3: Severity
+# Filter 3: Severity (using already-implemented sorting)
 def filter_by_severity(notams: List[Notam], severity) -> List[Notam]:
-    return [n for n in notams if get_severity(n) == severity] # TODO: replace get_severity with actual severity function
+    return [n for n in notams if score(n) >= severity] 
 
 # Filter 4: Time Window
 def filter_by_time(notams: List[Notam], start: datetime.datetime, end: datetime.datetime) -> List[Notam]:
